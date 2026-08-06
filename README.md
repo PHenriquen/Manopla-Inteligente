@@ -1,35 +1,37 @@
 # AEGIS GAUNTLET
 
-AEGIS GAUNTLET é uma proposta de manopla inteligente inspirada em Iron Man, concebida como um projeto de IoT, hardware e robótica para demonstrar controle por gestos, feedback tátil, iluminação e interface web.
+AEGIS GAUNTLET é uma proposta de manopla inteligente inspirada em Iron Man, concebida como um projeto de IoT, mecatrônica, hardware e robótica para demonstrar controle por gestos, feedback tátil, iluminação e uma interface web profissional.
 
 ## Visão do projeto
 
-O objetivo é transformar a ideia em um protótipo de alto impacto visual e técnico, suficiente para impressionar em portfólio, mostrar capacidade de integrar hardware, firmware, software e design de experiência.
+O objetivo é transformar a ideia em um protótipo de alto impacto visual e técnico, suficiente para impressionar em portfólio, mostrar capacidade de integrar hardware, firmware, software, modelagem 3D e design de experiência.
 
-Este repositório foi estruturado para parecer um projeto completo e profissional, mesmo com foco em prototipagem e simulação inicial. A ideia central é mostrar que o conceito é viável, bem pensado e preparado para evolução.
+Este repositório foi estruturado para apresentar o projeto como um conceito bem pensado, com foco em prototipagem realista e em mostrar um caminho claro de evolução.
 
 ## O que esse projeto representa
 
 - Experiência com IoT e sistemas embarcados
 - Desenvolvimento de firmware para ESP32
-- Interface web para monitoramento e controle
-- Prototipagem de interação por gestos
-- Design de produto com foco em narrativa tecnológica e estética
+- Controle de LEDs, vibração e atuação mecânica
+- Modelagem 3D para estrutura da manopla
+- Interface web para demonstração e controle
+- Narrativa forte para portfolio e currículo
 
-## Melhor abordagem para este projeto
+## Melhor abordagem
 
-A melhor forma de apresentar esse projeto sem parecer incompleto é tratá-lo como um MVP de conceito, com:
+A melhor forma de apresentar esse projeto é tratá-lo como um MVP conceitual e tecnicamente sólido, com:
 
-1. Arquitetura bem definida de hardware e software
+1. Estrutura mecânica em modelo 3D
 2. Firmware inicial para ESP32
-3. Interface web funcional para simular o comportamento da manopla
-4. Documentação clara de evolução futura
+3. Interface web funcional para simular a operação
+4. Documentação clara de evolução para hardware real
 
-Isso permite mostrar um projeto sério, interessante e profissional, sem prometer hardware físico ainda não adquirido.
+Isso permite mostrar um projeto sério, interessante e profissional, sem parecer incompleto.
 
 ## Estrutura do repositório
 
-- firmware/: esqueleto inicial do firmware para ESP32
+- firmware/: firmware inicial para ESP32
+- mechanics/: modelo 3D em OpenSCAD
 - web/: interface web interativa para demonstrar o conceito
 - docs/: documentação de arquitetura, hardware e roadmap
 
@@ -48,20 +50,13 @@ Depois acesse:
 http://localhost:8000
 ```
 
-## Roadmap sugerido
-
-- MVP visual e funcional da interface web
-- Firmware inicial com comunicação Wi-Fi e controle básico
-- Integração com sensores de movimento e vibração
-- Melhorias em UX e apresentação para portfólio
-
 ## Tecnologias previstas
 
 - ESP32
 - C++ / Arduino
+- OpenSCAD
 - HTML, CSS e JavaScript
-- Wi-Fi e comunicação serial
-- LED RGB e vibração
+- LEDs, vibração e atuação básica
 
 ## Objetivo de portfolio
 
@@ -69,6 +64,7 @@ Este projeto é excelente para mostrar que você consegue unir:
 
 - criatividade
 - engenharia
+- mecatrônica
 - desenvolvimento embarcado
 - experiência com interface digital
 - narrativa de produto
