@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AEGIS GAUNTLET</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="dashboard">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">IoT • Hardware • Robótica</p>
+          <h1>AEGIS GAUNTLET</h1>
+          <p class="description">
+            Uma manopla inteligente inspirada em Iron Man, com foco em gestos,
+            feedback visual, vibração e uma interface web profissional.
+          </p>
+        </div>
+        <div class="panel status-panel">
+          <h2>Status da manopla</h2>
+          <div class="status-row">
+            <span>Estado</span>
+            <strong id="stateValue">Pronto</strong>
+          </div>
+          <div class="status-row">
+            <span>Gesto</span>
+            <strong id="gestureValue">Open Hand</strong>
+          </div>
+          <div class="status-row">
+            <span>Energia</span>
+            <strong id="powerValue">87%</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="controls">
+        <div class="panel">
+          <h3>Controle</h3>
+          <button id="powerButton">Ligar sistema</button>
+          <select id="gestureSelect">
+            <option value="Open Hand">Open Hand</option>
+            <option value="Fist">Fist</option>
+            <option value="Point">Point</option>
+            <option value="Wave">Wave</option>
+          </select>
+        </div>
+
+        <div class="panel">
+          <h3>Feedback visual</h3>
+          <div id="ledRing"></div>
+          <p id="feedbackText">Sistema pronto para interação</p>
+        </div>
+
+        <div class="panel">
+          <h3>Log do sistema</h3>
+          <ul id="logList"></ul>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
