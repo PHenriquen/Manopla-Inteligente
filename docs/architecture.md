@@ -1,8 +1,8 @@
-# Arquitetura do AEGIS GAUNTLET
+# Arquitetura da Manopla Inteligente
 
 ## Visão geral
 
-O AEGIS GAUNTLET é um sistema composto por três camadas principais:
+A **Manopla Inteligente** é um sistema composto por três camadas principais:
 
 1. Camada física: manopla com sensores, LEDs, vibração e processamento embarcado
 2. Camada de controle: firmware rodando em ESP32
@@ -48,10 +48,10 @@ A interface web pode exibir:
 
 ## Estratégia de prototipagem
 
-Como o foco inicial é apresentável e profissional, a implementação pode começar com:
+A implementação pode começar com:
 
 - simulação de sensores em interface web
 - firmware com lógica de estados bem definida
 - documentação de integração futura com hardware real
 
-Isso evita depender de compra imediata de componentes e mantém o projeto sólido para portfolio.
+Isso permite evoluir o projeto de forma incremental sem depender da compra imediata de todos os componentes físicos.
