@@ -1,43 +1,44 @@
-# AEGIS GAUNTLET
+# MANOPLA INTELIGENTE
 
-AEGIS GAUNTLET é uma proposta de manopla inteligente inspirada em Iron Man, concebida como um projeto de IoT, mecatrônica, hardware e robótica para demonstrar controle por gestos, feedback tátil, iluminação e uma interface web profissional.
+A **Manopla Inteligente** é um projeto pessoal de IoT, sistemas embarcados, hardware e prototipagem inspirado nas interfaces tecnológicas do Homem de Ferro. O objetivo é explorar controle por gestos, feedback tátil e visual, telemetria e integração entre firmware, estrutura física e interface web.
 
 ## Visão do projeto
 
-O objetivo é transformar a ideia em um protótipo de alto impacto visual e técnico, suficiente para impressionar em portfólio, mostrar capacidade de integrar hardware, firmware, software, modelagem 3D e design de experiência.
+A proposta é construir um protótipo apresentável e tecnicamente sólido que demonstre integração entre hardware, firmware, software, modelagem 3D e experiência de uso.
 
-Este repositório foi estruturado para apresentar o projeto como um conceito bem pensado, com foco em prototipagem realista e em mostrar um caminho claro de evolução.
+O projeto começa com uma base digital e embarcada que pode evoluir gradualmente até um protótipo físico completo, sem depender de todos os componentes desde a primeira versão.
 
 ## O que esse projeto representa
 
-- Experiência com IoT e sistemas embarcados
+- IoT e sistemas embarcados
 - Desenvolvimento de firmware para ESP32
-- Controle de LEDs, vibração e atuação mecânica
-- Modelagem 3D para estrutura da manopla
-- Interface web para demonstração e controle
-- Narrativa forte para portfolio e currículo
+- Reconhecimento e interpretação de gestos
+- Controle de LEDs e feedback por vibração
+- Modelagem 3D da estrutura da manopla
+- Interface web para visualização de estado e controle
+- Integração entre hardware e software
 
-## Melhor abordagem
+## Estratégia de desenvolvimento
 
-A melhor forma de apresentar esse projeto é tratá-lo como um MVP conceitual e tecnicamente sólido, com:
+A primeira versão é estruturada em quatro frentes:
 
 1. Estrutura mecânica em modelo 3D
 2. Firmware inicial para ESP32
-3. Interface web funcional para simular a operação
-4. Documentação clara de evolução para hardware real
+3. Interface web funcional para simular e acompanhar a operação
+4. Documentação de evolução para sensores e hardware físico
 
-Isso permite mostrar um projeto sério, interessante e profissional, sem parecer incompleto.
+Essa abordagem permite validar lógica, arquitetura e experiência antes de investir em todos os componentes do protótipo.
 
 ## Estrutura do repositório
 
-- firmware/: firmware inicial para ESP32
-- mechanics/: modelo 3D em OpenSCAD
-- web/: interface web interativa para demonstrar o conceito
-- docs/: documentação de arquitetura, hardware e roadmap
+- `firmware/`: firmware inicial para ESP32
+- `mechanics/`: modelo 3D em OpenSCAD
+- `web/`: interface web interativa para demonstração e controle
+- `docs/`: arquitetura e roadmap de hardware
 
 ## Como executar a interface web
 
-Abra o arquivo web/index.html em um navegador ou use um servidor simples:
+Abra o arquivo `web/index.html` em um navegador ou use um servidor simples:
 
 ```bash
 cd web
@@ -56,17 +57,9 @@ http://localhost:8000
 - C++ / Arduino
 - OpenSCAD
 - HTML, CSS e JavaScript
-- LEDs, vibração e atuação básica
+- sensores de movimento e toque
+- LEDs e motor de vibração
 
-## Objetivo de portfolio
+## Objetivo de portfólio
 
-Este projeto é excelente para mostrar que você consegue unir:
-
-- criatividade
-- engenharia
-- mecatrônica
-- desenvolvimento embarcado
-- experiência com interface digital
-- narrativa de produto
-
-Ele funciona muito bem como exemplo de identidade técnica e visão de inovação.
+A Manopla Inteligente foi pensada para demonstrar uma frente complementar ao desenvolvimento de software tradicional: sistemas embarcados, prototipagem, integração com sensores e construção de uma interface digital ligada a um dispositivo físico.
