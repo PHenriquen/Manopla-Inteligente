@@ -26,11 +26,10 @@ void sensorTask(void*) {
   TickType_t nextWake = xTaskGetTickCount();
 
   while (true) {
-    SensorSample sample{
-      .timestamp_ms = millis(),
-      .flex_raw = static_cast<uint16_t>(analogRead(kFlexPin)),
-      .battery_raw = static_cast<uint16_t>(analogRead(kBatteryPin)),
-    };
+    SensorSample sample{};
+    sample.timestamp_ms = millis();
+    sample.flex_raw = static_cast<uint16_t>(analogRead(kFlexPin));
+    sample.battery_raw = static_cast<uint16_t>(analogRead(kBatteryPin));
 
     portENTER_CRITICAL(&g_bufferMux);
     g_samples.push(sample);
@@ -54,14 +53,13 @@ void telemetryTask(void*) {
     portEXIT_CRITICAL(&g_bufferMux);
 
     if (found) {
-      TelemetryPayload payload{
-        .accel_x_mg = 0,
-        .accel_y_mg = 0,
-        .accel_z_mg = 0,
-        .battery_mv = static_cast<uint16_t>((latest.battery_raw * 3300UL) / 4095UL),
-        .flex_raw = latest.flex_raw,
-        .gesture = 0,
-      };
+      TelemetryPayload payload{};
+      payload.accel_x_mg = 0;
+      payload.accel_y_mg = 0;
+      payload.accel_z_mg = 0;
+      payload.battery_mv = static_cast<uint16_t>((latest.battery_raw * 3300UL) / 4095UL);
+      payload.flex_raw = latest.flex_raw;
+      payload.gesture = 0;
 
       const auto packet = gauntlet::make_packet(PacketType::Telemetry, g_sequence++, payload);
       Serial.write(reinterpret_cast<const uint8_t*>(&packet), sizeof(packet));
