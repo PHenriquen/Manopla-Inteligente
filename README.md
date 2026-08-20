@@ -1,115 +1,116 @@
-# MANOPLA INTELIGENTE
+# Manopla Inteligente
 
-A **Manopla Inteligente** é um projeto pessoal de IoT, sistemas embarcados, hardware e prototipagem inspirado em interfaces tecnológicas vestíveis. O objetivo é explorar controle por gestos, feedback tátil e visual, telemetria e integração entre firmware, estrutura física e interface web.
+A Manopla Inteligente é um projeto pessoal para estudar a ligação entre **ESP32, sensores, firmware e uma peça vestível**.
 
-O projeto funciona como a frente mais próxima do hardware no portfólio: além do protótipo visual, ele inclui firmware C++, protocolos binários, conceitos de tempo real e modelagem 3D.
+A ideia é chegar a um protótipo físico que consiga ler movimentos/contato, enviar telemetria e devolver feedback por luz ou vibração. O repositório ainda está antes dessa etapa física completa: hoje ele concentra o firmware base, o protocolo de comunicação, um modelo mecânico inicial e uma interface de apoio.
 
-## Visão do projeto
+> Estado atual: protótipo de firmware + mecânica digital. A integração com os sensores reais ainda é o próximo passo.
 
-A proposta é construir um protótipo apresentável e tecnicamente sólido que demonstre integração entre:
+## O que existe hoje
 
-- hardware e sensores;
-- firmware ESP32;
-- software/interface;
-- telemetria e protocolos;
-- modelagem 3D;
-- experiência de uso.
+- firmware para ESP32 com aquisição periódica de entradas analógicas;
+- tarefas FreeRTOS separando leitura dos sensores e envio de telemetria;
+- ring buffer de tamanho fixo para não depender de alocação dinâmica durante a coleta;
+- pacote binário versionado com sequence number e CRC16;
+- modelo inicial da estrutura em OpenSCAD;
+- interface web simples para acompanhar a ideia do dispositivo.
 
-O desenvolvimento começa com uma base digital e embarcada que pode evoluir gradualmente até um protótipo físico completo, sem exigir todos os componentes desde a primeira versão.
+O firmware atual usa duas entradas analógicas como base para **flexão** e **leitura de bateria**. Esse mapeamento é provisório até eu montar a primeira versão física e calibrar os sensores de verdade.
 
-## O que esse projeto representa
+## Fluxo do firmware
 
-- IoT e sistemas embarcados;
-- desenvolvimento de firmware para ESP32;
-- C++ aplicado a hardware;
-- reconhecimento e interpretação de gestos;
-- controle de LEDs e feedback por vibração;
-- modelagem 3D da estrutura da manopla;
-- interface web para estado e controle;
-- protocolos binários e integridade de dados;
-- noções de RTOS/tempo real;
-- integração entre hardware e software.
+```text
+entrada dos sensores
+       ↓
+leitura a 100 Hz
+       ↓
+ring buffer
+       ↓
+tarefa de telemetria a 20 Hz
+       ↓
+pacote binário + CRC16
+       ↓
+Serial
+```
+
+O código principal está em [`firmware/advanced/gauntlet_realtime.ino`](firmware/advanced/gauntlet_realtime.ino).
+
+A ideia de separar as duas tarefas é simples: a frequência de leitura dos sensores não precisa depender da velocidade com que os dados são enviados para outro programa.
 
 ## Estrutura
 
 ```text
 firmware/
-  gauntlet_controller.ino        firmware inicial
-  gesture_glove.ino              experimento de gestos
-  core/
-    ring_buffer.h                 buffer estático sem heap
-    packet_protocol.h             protocolo binário + CRC16
-  advanced/
-    gauntlet_realtime.ino         experimento ESP32/FreeRTOS
+├── advanced/
+│   └── gauntlet_realtime.ino   # firmware atual do protótipo
+└── core/
+    ├── packet_protocol.h       # formato dos pacotes + CRC16
+    └── ring_buffer.h           # buffer estático
+
 mechanics/
-  ...                             modelos OpenSCAD
-web/
-  ...                             interface de demonstração
-docs/
-  ...                             arquitetura e evolução técnica
+└── gauntlet.scad               # primeira estrutura em OpenSCAD
+
+web/                             # interface de apoio
+docs/                            # anotações técnicas
 ```
 
-## Firmware de baixo nível
+## Hardware planejado
 
-A camada `firmware/core/` foi adicionada para aproximar o projeto de engenharia embarcada real, indo além de sketches Arduino simples.
+A primeira montagem física deve ser pequena. Não quero colocar sensores só para aumentar a lista de componentes.
 
-`ring_buffer.h` usa armazenamento de capacidade fixa, sem alocação dinâmica, para tornar o fluxo de sensores previsível. `packet_protocol.h` define layout binário versionado, sequence number e CRC-16/CCITT para verificar integridade dos pacotes.
+A base que faz sentido testar primeiro é:
 
-O experimento `firmware/advanced/gauntlet_realtime.ino` separa aquisição e transmissão em tarefas FreeRTOS:
+- ESP32;
+- um sensor flex ou outro sensor de dobra;
+- IMU para orientação/movimento;
+- motor de vibração;
+- LED(s) de estado;
+- bateria e leitura de tensão.
 
-```text
-sensores (100 Hz) -> ring buffer -> telemetria (20 Hz) -> pacote binário serial
-```
+Depois dessa etapa, dá para decidir se reconhecimento de gestos mais elaborado, BLE/Wi-Fi ou atuadores adicionais realmente melhoram o projeto.
 
-Isso introduz tarefas, prioridades, periodicidade determinística, critical sections e comunicação binária. Detalhes em [`docs/LOW_LEVEL_ENGINEERING.md`](docs/LOW_LEVEL_ENGINEERING.md).
+## Protocolo
 
-## Estratégia de desenvolvimento
+A comunicação serial não usa texto no firmware mais recente. `firmware/core/packet_protocol.h` define um pacote binário com cabeçalho, versão, tipo, sequência, payload e CRC.
 
-A evolução continua dividida em quatro frentes:
+Isso deixa mais fácil detectar pacote corrompido e manter compatibilidade quando novos campos forem adicionados.
 
-1. estrutura mecânica em modelo 3D;
-2. firmware ESP32, do nível simples ao RTOS;
-3. interface web funcional para simular e acompanhar a operação;
-4. integração gradual com sensores e hardware físico.
+## Mecânica
 
-Essa abordagem permite validar lógica, arquitetura e experiência antes de investir em todos os componentes do protótipo.
+`mechanics/gauntlet.scad` é o começo da parte física. O modelo ainda não deve ser tratado como peça pronta para impressão: medidas, encaixes, acesso à eletrônica e conforto só podem ser fechados depois de testar componentes reais.
 
-## Como executar a interface web
+## Interface web
 
-Abra o arquivo `web/index.html` em um navegador ou use um servidor simples:
+A interface pode ser aberta sem build:
 
 ```bash
 cd web
 python -m http.server 8000
 ```
 
-Depois acesse `http://localhost:8000`.
+Depois, abra `http://localhost:8000`.
+
+Ela serve como apoio para visualizar o estado do protótipo. Não é a parte principal do projeto.
 
 ## Tecnologias
 
-- **Microcontrolador:** ESP32;
-- **Firmware:** C++ / Arduino;
-- **Tempo real:** FreeRTOS (experimento avançado);
-- **Protocolos:** pacote binário próprio + CRC16;
-- **Modelagem:** OpenSCAD;
-- **Web:** HTML, CSS e JavaScript;
-- **Hardware previsto:** sensores de movimento/toque, LEDs e motor de vibração.
+| Parte | Tecnologia |
+|---|---|
+| Microcontrolador | ESP32 |
+| Firmware | C++ / Arduino |
+| Agendamento | FreeRTOS |
+| Comunicação | Serial + protocolo binário |
+| Mecânica | OpenSCAD |
+| Interface | HTML, CSS e JavaScript |
 
-## Próximos passos físicos
+## Próximos testes
 
-Quando houver hardware disponível, a base atual pode evoluir para:
+1. montar ESP32 + primeiro sensor flex;
+2. confirmar frequência e ruído das leituras;
+3. calibrar valores mínimos/máximos;
+4. adicionar IMU;
+5. validar o pacote serial com um receptor real;
+6. testar feedback por vibração;
+7. ajustar o modelo da manopla às dimensões dos componentes.
 
-- IMU via I2C/SPI;
-- sensores flex/toque reais;
-- feedback háptico;
-- BLE/Wi-Fi;
-- calibração persistente;
-- controle de energia/bateria;
-- estrutura impressa em 3D;
-- testes hardware-in-the-loop.
-
-## Objetivo de portfólio
-
-A Manopla Inteligente demonstra uma frente complementar ao desenvolvimento de software tradicional: **firmware, baixo nível, RTOS, protocolos, sensores, IoT, modelagem e construção de um dispositivo físico**.
-
-Em conjunto com os outros projetos, ela é a peça que mostra que o portfólio não termina na tela do computador.
+Quero manter cada etapa pequena o suficiente para saber o que realmente funcionou em hardware, em vez de construir toda a arquitetura antes da primeira montagem física.
