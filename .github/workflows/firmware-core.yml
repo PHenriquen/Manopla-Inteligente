@@ -1,0 +1,29 @@
+name: Firmware Core Check
+
+on:
+  push:
+    branches:
+      - main
+      - "work/**"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    name: Host C++ tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile sensor calibration tests
+        run: g++ -std=c++17 -Wall -Wextra -Werror tests/test_sensor_calibration.cpp -o /tmp/test_sensor_calibration
+
+      - name: Run sensor calibration tests
+        run: /tmp/test_sensor_calibration
