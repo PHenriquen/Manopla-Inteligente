@@ -4,7 +4,7 @@ A Manopla Inteligente é um projeto pessoal para estudar a ligação entre **ESP
 
 A ideia é chegar a um protótipo físico que consiga ler movimentos/contato, enviar telemetria e devolver feedback por luz ou vibração. O repositório ainda está antes dessa etapa física completa: hoje ele concentra o firmware base, o protocolo de comunicação, um modelo mecânico inicial e uma interface de apoio.
 
-> Estado atual: protótipo de firmware + mecânica digital. A integração com os sensores reais ainda é o próximo passo.
+> Estado atual: protótipo de firmware, mecânica digital inicial e configurador 3D conceitual. A integração com sensores reais ainda é o próximo passo.
 
 ## O que existe hoje
 
@@ -13,7 +13,7 @@ A ideia é chegar a um protótipo físico que consiga ler movimentos/contato, en
 - ring buffer de tamanho fixo para não depender de alocação dinâmica durante a coleta;
 - pacote binário versionado com sequence number e CRC16;
 - modelo inicial da estrutura em OpenSCAD;
-- interface web simples para acompanhar a ideia do dispositivo.
+- configurador 3D para explorar módulos, camadas e hipóteses de abertura sem confundir a visualização com uma peça fabricável.
 
 O firmware atual usa duas entradas analógicas como base para **flexão** e **leitura de bateria**. Esse mapeamento é provisório até eu montar a primeira versão física e calibrar os sensores de verdade.
 
@@ -51,7 +51,11 @@ mechanics/
 └── gauntlet.scad               # primeira estrutura em OpenSCAD
 
 web/                             # interface de apoio
-docs/                            # anotações técnicas
+├── modules.js                   # catálogo de peças desacoplado da interface
+└── app.js                       # cena, seleção, materiais e animações
+
+docs/                            # arquitetura, roadmap e convenções
+tests/                           # validação do catálogo modular
 ```
 
 ## Hardware planejado
@@ -81,16 +85,23 @@ Isso deixa mais fácil detectar pacote corrompido e manter compatibilidade quand
 
 ## Interface web
 
-A interface pode ser aberta sem build:
+O configurador permite girar e aproximar o modelo, selecionar peças, alternar camadas, abrir painéis, explodir a montagem, ocultar ou isolar módulos e testar acabamentos digitais. As peças exibidas são volumes conceituais originais; não são CAD nem servem para fabricação.
+
+Para executar:
 
 ```bash
-cd web
-python -m http.server 8000
+npm install
+npm run dev
 ```
 
-Depois, abra `http://localhost:8000`.
+Testes e build de produção:
 
-Ela serve como apoio para visualizar o estado do protótipo. Não é a parte principal do projeto.
+```bash
+npm test
+npm run build
+```
+
+O catálogo fica em `web/modules.js`, permitindo substituir geometrias e manter os mesmos identificadores. As convenções para peças e animações estão em [`docs/CONFIGURATOR.md`](docs/CONFIGURATOR.md).
 
 ## Tecnologias
 
@@ -101,7 +112,7 @@ Ela serve como apoio para visualizar o estado do protótipo. Não é a parte pri
 | Agendamento | FreeRTOS |
 | Comunicação | Serial + protocolo binário |
 | Mecânica | OpenSCAD |
-| Interface | HTML, CSS e JavaScript |
+| Interface | HTML, CSS, JavaScript, Three.js e Vite |
 
 ## Próximos testes
 

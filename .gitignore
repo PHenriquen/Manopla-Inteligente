@@ -8,3 +8,7 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.log
+
+# Web dependencies and build output
+node_modules/
+web/dist/
