@@ -1,65 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manopla Inteligente</title>
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Configurador 3D conceitual e modular da plataforma vestível da Sypher Labs." />
+    <title>Manopla Inteligente — Configurador conceitual</title>
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="dashboard">
-      <section class="hero">
-        <div>
-          <p class="eyebrow">IoT • Sistemas Embarcados • Prototipagem</p>
-          <h1>MANOPLA INTELIGENTE</h1>
-          <p class="description">
-            Protótipo inspirado nas interfaces tecnológicas do Homem de Ferro,
-            com foco em gestos, feedback visual e tátil, telemetria e integração
-            entre hardware e software.
-          </p>
-        </div>
-        <div class="panel status-panel">
-          <h2>Status da manopla</h2>
-          <div class="status-row">
-            <span>Estado</span>
-            <strong id="stateValue">Pronto</strong>
-          </div>
-          <div class="status-row">
-            <span>Gesto</span>
-            <strong id="gestureValue">Open Hand</strong>
-          </div>
-          <div class="status-row">
-            <span>Energia</span>
-            <strong id="powerValue">87%</strong>
-          </div>
-        </div>
-      </section>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#viewer" aria-label="Ir para o configurador">
+          <span class="brand-mark" aria-hidden="true"><i></i></span>
+          <span><strong>SYPHER LABS</strong><small>DIGITAL PROTOTYPE / 01</small></span>
+        </a>
+        <div class="status"><span></span>MODELO CONCEITUAL · NÃO FABRICÁVEL</div>
+      </header>
 
-      <section class="controls">
-        <div class="panel">
-          <h3>Controle</h3>
-          <button id="powerButton">Ligar sistema</button>
-          <select id="gestureSelect">
-            <option value="Open Hand">Open Hand</option>
-            <option value="Fist">Fist</option>
-            <option value="Point">Point</option>
-            <option value="Wave">Wave</option>
-          </select>
-        </div>
+      <section class="workspace" id="viewer">
+        <aside class="rail panel" aria-label="Módulos do modelo">
+          <div class="panel-heading"><span>01</span><div><small>ASSEMBLY</small><h1>Manopla Inteligente</h1></div></div>
+          <p class="intro">Explore a arquitetura digital por camadas. As geometrias representam relações entre módulos, não medidas finais.</p>
+          <div class="layer-controls" aria-label="Camadas visíveis">
+            <button class="layer-toggle active" data-layer="finish" aria-pressed="true"><i class="finish"></i>Acabamento</button>
+            <button class="layer-toggle active" data-layer="structure" aria-pressed="true"><i class="structure"></i>Estrutura</button>
+            <button class="layer-toggle active" data-layer="electronics" aria-pressed="true"><i class="electronics"></i>Eletrônica</button>
+          </div>
+          <div class="module-list" id="moduleList"></div>
+        </aside>
 
-        <div class="panel">
-          <h3>Feedback visual</h3>
-          <div id="ledRing"></div>
-          <p id="feedbackText">Sistema pronto para interação</p>
-        </div>
+        <section class="viewport-panel" aria-label="Visualizador tridimensional">
+          <canvas id="modelCanvas" aria-label="Modelo tridimensional rotacionável da plataforma vestível"></canvas>
+          <div class="viewport-gradient" aria-hidden="true"></div>
+          <div class="view-label"><span>LIVE VIEW</span><strong id="viewState">ASSEMBLED</strong></div>
+          <div class="axis" aria-hidden="true"><i></i><span>X</span><span>Y</span><span>Z</span></div>
+          <div class="viewer-help">Arraste para girar · Role para aproximar · Clique numa peça para selecionar</div>
+          <div class="toolbar" aria-label="Controles do modelo">
+            <button id="resetView">Recentrar</button>
+            <button id="togglePanels" aria-pressed="false">Abrir painéis</button>
+            <button id="toggleExploded" aria-pressed="false">Modo explodido</button>
+          </div>
+        </section>
 
-        <div class="panel">
-          <h3>Log do sistema</h3>
-          <ul id="logList"></ul>
-        </div>
+        <aside class="inspector panel" aria-label="Propriedades do módulo">
+          <div class="panel-heading compact"><span>02</span><div><small>INSPECTOR</small><h2 id="moduleName">Selecione um módulo</h2></div></div>
+          <div id="moduleDetails" class="module-details empty">Clique numa peça do modelo ou use a lista de montagem.</div>
+          <div class="inspector-actions">
+            <button id="hideSelected" disabled>Ocultar selecionado</button>
+            <button id="isolateSelected" disabled>Isolar selecionado</button>
+            <button id="showAll">Mostrar tudo</button>
+          </div>
+          <div class="material-panel">
+            <small>MATERIAL DIGITAL</small>
+            <div class="swatches" role="group" aria-label="Acabamento digital">
+              <button class="swatch selected" data-theme="graphite" aria-label="Grafite" aria-pressed="true"></button>
+              <button class="swatch" data-theme="ceramic" aria-label="Cerâmica clara" aria-pressed="false"></button>
+              <button class="swatch" data-theme="signal" aria-label="Vermelho sinal" aria-pressed="false"></button>
+            </div>
+          </div>
+          <div class="disclaimer"><strong>Limite atual</strong><p>Sem CAD ou medidas físicas, animações e encaixes são hipóteses visuais. A validação mecânica começa somente após medir componentes e testar ergonomia.</p></div>
+        </aside>
       </section>
     </main>
-
-    <script src="app.js"></script>
+    <script type="module" src="./app.js"></script>
   </body>
 </html>
