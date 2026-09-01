@@ -13,7 +13,8 @@ A ideia é chegar a um protótipo físico que consiga ler movimentos/contato, en
 - ring buffer de tamanho fixo para não depender de alocação dinâmica durante a coleta;
 - pacote binário versionado com sequence number e CRC16;
 - modelo inicial da estrutura em OpenSCAD;
-- interface web simples para acompanhar a ideia do dispositivo.
+- interface web simples para acompanhar a ideia do dispositivo;
+- modo espelho experimental por webcam, com estados de dedos, gestos e rotação.
 
 O firmware atual usa duas entradas analógicas como base para **flexão** e **leitura de bateria**. Esse mapeamento é provisório até eu montar a primeira versão física e calibrar os sensores de verdade.
 
@@ -51,6 +52,7 @@ mechanics/
 └── gauntlet.scad               # primeira estrutura em OpenSCAD
 
 web/                             # interface de apoio
+tools/vision_mirror/             # entrada alternativa por webcam
 docs/                            # anotações técnicas
 ```
 
@@ -79,6 +81,20 @@ Isso deixa mais fácil detectar pacote corrompido e manter compatibilidade quand
 
 `mechanics/gauntlet.scad` é o começo da parte física. O modelo ainda não deve ser tratado como peça pronta para impressão: medidas, encaixes, acesso à eletrônica e conforto só podem ser fechados depois de testar componentes reais.
 
+## Modo espelho por visão
+
+`tools/vision_mirror` transforma uma mão detectada pela webcam em um quadro de controle padronizado. Ele identifica os cinco dedos, gestos iniciais e rotação, aplica estabilização temporal e publica JSON no terminal ou por UDP.
+
+Esse modo não substitui os sensores físicos: ele permite desenvolver e demonstrar a camada de controle enquanto o hardware é calibrado.
+
+```bash
+pip install -r tools/vision_mirror/requirements.txt
+python tools/vision_mirror/vision_mirror.py
+```
+
+Veja [a documentação do modo espelho](docs/vision-mirror.md) e [o guia da ferramenta](tools/vision_mirror/README.md).
+As referências mecânicas e de visão embarcada estão registradas em [Referências de design e engenharia](docs/design-references.md).
+
 ## Interface web
 
 A interface pode ser aberta sem build:
@@ -102,6 +118,7 @@ Ela serve como apoio para visualizar o estado do protótipo. Não é a parte pri
 | Comunicação | Serial + protocolo binário |
 | Mecânica | OpenSCAD |
 | Interface | HTML, CSS e JavaScript |
+| Visão experimental | Python, MediaPipe e OpenCV |
 
 ## Próximos testes
 
@@ -111,6 +128,7 @@ Ela serve como apoio para visualizar o estado do protótipo. Não é a parte pri
 4. adicionar IMU;
 5. validar o pacote serial com um receptor real;
 6. testar feedback por vibração;
-7. ajustar o modelo da manopla às dimensões dos componentes.
+7. ajustar o modelo da manopla às dimensões dos componentes;
+8. conectar `gauntlet.control.v1` ao configurador 3D e, depois, a um protótipo externo.
 
 Quero manter cada etapa pequena o suficiente para saber o que realmente funcionou em hardware, em vez de construir toda a arquitetura antes da primeira montagem física.
