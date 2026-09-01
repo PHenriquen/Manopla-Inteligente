@@ -1,0 +1,27 @@
+name: Vision mirror tests
+
+on:
+  push:
+    paths:
+      - "tools/vision_mirror/**"
+      - ".github/workflows/vision-mirror-tests.yml"
+  pull_request:
+    paths:
+      - "tools/vision_mirror/**"
+      - ".github/workflows/vision-mirror-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  geometry-and-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile Python modules
+        run: python -m py_compile tools/vision_mirror/hand_state.py tools/vision_mirror/vision_mirror.py
+      - name: Run camera-independent tests
+        run: python -m unittest discover -s tools/vision_mirror/tests -v
