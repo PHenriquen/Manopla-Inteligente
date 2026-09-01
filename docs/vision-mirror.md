@@ -48,6 +48,28 @@ significado do resultado:
 Essa fase ainda não movimenta atuadores. O destino UDP é uma fronteira simples
 para conectar depois o configurador 3D ou um protótipo externo.
 
+## Evolução: Vision Node
+
+A referência de óculos experimentais
+[F.L.I.R.T.](https://www.instagram.com/reel/DadZGIAspmi/) mostra um caminho para
+tirar a visão do computador: uma placa compacta como a
+[Arduino Nicla Vision](https://docs.arduino.cc/hardware/nicla-vision) pode
+processar câmera, IMU e distância localmente e transmitir apenas o resultado.
+
+No projeto, isso seria um módulo opcional e separado:
+
+```text
+câmera embarcada -> gesto local -> gauntlet.control.v1 -> manopla / HUD / simulador
+```
+
+O primeiro passo continua sendo a webcam porque é mais barata e fácil de depurar.
+Uma placa embarcada só será escolhida depois de medir o modelo e a latência. Um
+display transparente seria apenas uma saída para estado, gesto e telemetria.
+
+A aplicação não precisa identificar pessoas nem inferir atração ou emoção. O
+padrão aproveitado da referência é processamento local + HUD, com privacidade por
+padrão e sem armazenar imagens.
+
 ## Próximas integrações
 
 1. fazer o configurador 3D consumir `gauntlet.control.v1`;

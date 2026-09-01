@@ -93,6 +93,7 @@ python tools/vision_mirror/vision_mirror.py
 ```
 
 Veja [a documentação do modo espelho](docs/vision-mirror.md) e [o guia da ferramenta](tools/vision_mirror/README.md).
+As referências mecânicas e de visão embarcada estão registradas em [Referências de design e engenharia](docs/design-references.md).
 
 ## Interface web
 
