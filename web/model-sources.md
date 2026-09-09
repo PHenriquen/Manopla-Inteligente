@@ -37,12 +37,12 @@ The native viewer may:
 - switch between original color, monochrome, print-preview and wireframe materials;
 - isolate parts;
 - visually separate an assembly with an exploded-view slider;
-- move a selected part outward as an assembly preview;
-- export the selected visual mesh as STL.
+- move a selected part outward as a non-physical assembly preview;
+- inspect triangle counts and uncalibrated source-space bounds.
 
-These controls do **not** claim that a source mesh is watertight, dimensionally calibrated, structurally safe, correctly toleranced, or suitable for a specific printer. Source dimensions are shown only in uncalibrated model units.
+These controls do **not** claim that a source mesh is watertight, dimensionally calibrated, structurally safe, correctly toleranced, or ready for a specific printer. Source dimensions are shown only in uncalibrated model units, and the site does not provide a print-ready export path.
 
-The project treats the Iron Man geometry as a display/cosplay-style visual assembly. It does not implement functional weapon mechanisms.
+The project treats the geometry as a display/cosplay-style visual assembly. Opening and separation controls are interface animations rather than validated mechanical mechanisms.
 
 ## Data policy
 
