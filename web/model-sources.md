@@ -1,39 +1,49 @@
-# 3D asset sources
+# 3D asset provenance
 
-This file records the provenance of third-party 3D assets shown through official hosted viewers. The assets are not redistributed by this repository.
+This file keeps license and attribution information out of the main fabrication interface while still preserving the provenance required by the source assets.
 
-## Suit Overview
-- Model: Iron Man Suit
-- Creator: arnavkajjewad2008
-- Source: Sketchfab model `d6b97e705edb4b98a3cdb3856ccfe2d2`
-- License surfaced on source page: Creative Commons Attribution
-- Geometry surfaced on source page: 20.8k triangles / 10.5k vertices
+The web UI intentionally does **not** display creator cards, asset credits, marketplace links, triangle marketing data, or platform branding. It focuses only on the project and fabrication controls.
+
+## Full suit / gauntlet section
+
+- Model: IronMan
+- Creator: sanfree
+- Original source: Sketchfab model `226773abb03243a9b64f548332aa4f3a`
+- License embedded in the glTF: CC-BY-4.0
+- Runtime copy currently loaded from a public GitHub mirror of the exported glTF.
+- The Gauntlet module uses an isolated arm/hand region of this same visual model rather than a separate unverified hand asset.
 
 ## Helmet
+
 - Model: Ironman Mark III Helmet *free*
-- Creator: Demonic Arts (@Jesterz86)
-- Source: Sketchfab model `71a03274781145699ac9f88d03609c43`
-- License surfaced on source page: Creative Commons Attribution
-- Geometry surfaced on source page: 36.3k triangles / 18.7k vertices
+- Creator: Demonic Arts / Jesterz86
+- Original source: Sketchfab model `71a03274781145699ac9f88d03609c43`
+- License embedded in the glTF: CC-BY-4.0
+- Runtime copy currently loaded from a public GitHub mirror of the exported glTF.
 
 ## Arc Reactor
+
 - Model: Arc Reactor
 - Creator: Ludus101
-- Source: Sketchfab model `7daf892988e54cdcb8bfd7dff3ed5d23`
-- License surfaced on source page: Creative Commons Attribution
-- Geometry surfaced on source page: 33.7k triangles / 18.2k vertices
+- Original source: Sketchfab model `7daf892988e54cdcb8bfd7dff3ed5d23`
+- License embedded in the glTF: CC-BY-4.0
+- Runtime copy currently loaded from a public GitHub mirror of the exported glTF.
 
-## Gauntlet / Hand
-- Model: Iron Man Hand
-- Creator: hasanlifurkan18072011
-- Source: Sketchfab model `0ac6ce69884d4f37b6018e0626cca1d7`
-- Geometry surfaced on source page: 95.4k triangles / 62.2k vertices
-- License: not asserted by this project. The asset is shown only through the creator/platform-hosted embed and is not redistributed locally.
+## Fabrication-view policy
 
-## Project data policy
-The interface distinguishes three kinds of information:
-1. real project facts already present in this repository;
-2. third-party asset metadata sourced from the asset page;
-3. explicitly labeled local simulation values used only in Diagnostics.
+The native viewer may:
 
-The interface must not present invented temperature, power, load, battery, telemetry or hardware state as real measurements.
+- select individual mesh parts;
+- switch between original color, monochrome, print-preview and wireframe materials;
+- isolate parts;
+- visually separate an assembly with an exploded-view slider;
+- move a selected part outward as an assembly preview;
+- export the selected visual mesh as STL.
+
+These controls do **not** claim that a source mesh is watertight, dimensionally calibrated, structurally safe, correctly toleranced, or suitable for a specific printer. Source dimensions are shown only in uncalibrated model units.
+
+The project treats the Iron Man geometry as a display/cosplay-style visual assembly. It does not implement functional weapon mechanisms.
+
+## Data policy
+
+The interface must not present invented temperature, power, load, battery, telemetry or hardware state as real measurements. Random values are allowed only inside the explicitly labeled Diagnostics simulation.
