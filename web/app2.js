@@ -1,98 +1,105 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/controls/OrbitControls.js';
-
 const $=(s)=>document.querySelector(s);const $$=(s)=>[...document.querySelectorAll(s)];
-const ui={canvas:$('#labCanvas'),wrap:$('#viewport'),title:$('#moduleTitle'),eyebrow:$('#moduleEyebrow'),desc:$('#moduleDesc'),nav:$$('.nav button'),modes:$$('.mode'),action:$('#contextAction'),hudBtn:$('#hudButton'),reset:$('#resetView'),name:$('#componentName'),status:$('#componentStatus'),description:$('#componentDesc'),kind:$('#factKind'),state:$('#factState'),source:$('#factSource'),impl:$('#factImpl'),simFlex:$('#simFlex'),simPitch:$('#simPitch'),simBattery:$('#simBattery'),simbox:$('#simbox'),hud:$('#hud'),error:$('#renderError')};
 
-const MODULES={
- suit:{eyebrow:'MARK III // SYSTEM MAP',title:'SUIT OVERVIEW',desc:'Mapa 3D dos subsistemas do protótipo conceitual.',action:'EXPLODE VIEW'},
- gauntlet:{eyebrow:'MK-I // WEARABLE PROTOTYPE',title:'GAUNTLET',desc:'Mecânica vestível, controlador e sensores previstos para a primeira montagem.',action:'ACTUATE FINGERS'},
- helmet:{eyebrow:'MARK III // INTERFACE CONCEPT',title:'HELMET',desc:'Capacete 3D com faceplate e HUD em modo demonstrativo.',action:'OPEN FACEPLATE'},
- reactor:{eyebrow:'ENERGY MODULE // VISUAL STUDY',title:'ARC REACTOR',desc:'Estudo visual interativo de anéis, bobinas e núcleo.',action:'PULSE CORE'},
- diagnostics:{eyebrow:'SIMULATION // NO HARDWARE LINK',title:'DIAGNOSTICS',desc:'Simulação local para testar a interface antes da conexão com o ESP32 real.',action:'RUN SIMULATION'}
+const ui={
+  nav:$$('.nav button'),modes:$$('.mode'),title:$('#moduleTitle'),eyebrow:$('#moduleEyebrow'),desc:$('#moduleDesc'),
+  reset:$('#resetView'),action:$('#contextAction'),hudBtn:$('#hudButton'),hud:$('#hud'),stage:$('#modelStage'),frame:$('#modelFrame'),
+  loader:$('#modelLoader'),diagnostic:$('#diagnosticStage'),hint:$('#viewHint'),credit:$('#assetCredit'),name:$('#componentName'),
+  status:$('#componentStatus'),description:$('#componentDesc'),creator:$('#factCreator'),license:$('#factLicense'),mesh:$('#factMesh'),
+  source:$('#factSource'),sourceLink:$('#sourceLink'),simbox:$('#simbox'),simFlex:$('#simFlex'),simPitch:$('#simPitch'),simBattery:$('#simBattery')
 };
 
-const COLORS={red:0x8f1d27,red2:0x3b0b12,gold:0xc7a56a,dark:0x111923,metal:0x8696a3,cyan:0x8ee8ff,elec:0x1b5263};
-let currentModule='suit',currentMode='assembled',root=new THREE.Group(),clickable=[],selected=null,plate=null,fingers=[],core=null,exploded=false,hud=false,simTimer=null;
+const ASSETS={
+  suit:{
+    eyebrow:'MARK III // HIGH-FIDELITY ASSET',title:'SUIT OVERVIEW',desc:'Armadura completa em viewer 3D de maior fidelidade.',
+    uid:'d6b97e705edb4b98a3cdb3856ccfe2d2',name:'IRON MAN SUIT',creator:'arnavkajjewad2008',license:'CC Attribution',mesh:'20.8k tris • 10.5k vertices',
+    source:'Sketchfab',url:'https://sketchfab.com/3d-models/iron-man-suit-d6b97e705edb4b98a3cdb3856ccfe2d2',
+    credit:'3D ASSET • arnavkajjewad2008 • CC BY'
+  },
+  gauntlet:{
+    eyebrow:'WEARABLE // HIGH-FIDELITY ASSET',title:'GAUNTLET',desc:'Modelo de mão/gauntlet usado como referência visual do conjunto vestível.',
+    uid:'0ac6ce69884d4f37b6018e0626cca1d7',name:'IRON MAN HAND',creator:'hasanlifurkan18072011',license:'Official hosted embed • license not asserted locally',mesh:'95.4k tris • 62.2k vertices',
+    source:'Sketchfab embed',url:'https://sketchfab.com/3d-models/iron-man-hand-0ac6ce69884d4f37b6018e0626cca1d7',
+    credit:'3D ASSET • hasanlifurkan18072011 • HOSTED EMBED'
+  },
+  helmet:{
+    eyebrow:'MARK III // HIGH-FIDELITY ASSET',title:'HELMET',desc:'Mark III detalhado, com peças separadas no asset original.',
+    uid:'71a03274781145699ac9f88d03609c43',name:'IRONMAN MARK III HELMET',creator:'Demonic Arts (@Jesterz86)',license:'CC Attribution',mesh:'36.3k tris • 18.7k vertices',
+    source:'Sketchfab',url:'https://sketchfab.com/3d-models/ironman-mark-iii-helmet-free-71a03274781145699ac9f88d03609c43',
+    credit:'3D ASSET • DEMONIC ARTS • CC BY'
+  },
+  reactor:{
+    eyebrow:'ENERGY MODULE // HIGH-FIDELITY ASSET',title:'ARC REACTOR',desc:'Modelo detalhado baseado no Arc Reactor do MCU.',
+    uid:'7daf892988e54cdcb8bfd7dff3ed5d23',name:'ARC REACTOR',creator:'Ludus101',license:'CC Attribution',mesh:'33.7k tris • 18.2k vertices',
+    source:'Sketchfab',url:'https://sketchfab.com/3d-models/arc-reactor-7daf892988e54cdcb8bfd7dff3ed5d23',
+    credit:'3D ASSET • LUDUS101 • CC BY'
+  },
+  diagnostics:{
+    eyebrow:'SIMULATION // NO HARDWARE LINK',title:'DIAGNOSTICS',desc:'Simulação local para testar a interface antes da conexão com sensores reais.',
+    uid:null,name:'LOCAL DIAGNOSTICS',creator:'Projeto Manopla Inteligente',license:'Projeto próprio',mesh:'Sem asset externo',source:'Interface local',url:null,credit:'SIMULATION • NO LIVE HARDWARE'
+  }
+};
 
-const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x05080d,.025);
-const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(6,3.5,8);
-const renderer=new THREE.WebGLRenderer({canvas:ui.canvas,antialias:true,alpha:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;renderer.setClearColor(0x000000,0);
-const controls=new OrbitControls(camera,ui.canvas);controls.enableDamping=true;controls.dampingFactor=.07;controls.minDistance=2;controls.maxDistance=18;
-scene.add(new THREE.HemisphereLight(0xd7f4ff,0x10141c,2.3));
-const key=new THREE.DirectionalLight(0xffffff,4.4);key.position.set(5,8,7);scene.add(key);
-const rim=new THREE.DirectionalLight(0x67dfff,3.1);rim.position.set(-7,3,-5);scene.add(rim);
-const warm=new THREE.PointLight(0xff7357,18,20,2);warm.position.set(-3,1,4);scene.add(warm);
-const grid=new THREE.GridHelper(18,30,0x193d4c,0x102631);grid.material.transparent=true;grid.material.opacity=.16;grid.position.y=-3;scene.add(grid);
-scene.add(root);
+let current='suit';let mode='clean';let hudActive=false;let simTimer=null;
 
-function mat(color,{metal=.72,rough=.28,emit=0,intensity=0}={}){return new THREE.MeshStandardMaterial({color,metalness:metal,roughness:rough,emissive:emit,emissiveIntensity:intensity,transparent:true,opacity:1});}
-function mesh(geo,material,pos=[0,0,0],rot=[0,0,0]){const m=new THREE.Mesh(geo,material);m.position.set(...pos);m.rotation.set(...rot);return m;}
-function box(size,material,pos,rot){return mesh(new THREE.BoxGeometry(...size),material,pos,rot)}
-function cyl(r1,r2,h,seg,material,pos,rot){return mesh(new THREE.CylinderGeometry(r1,r2,h,seg),material,pos,rot)}
-function register(m,info,category='mechanical',explode=[0,0,0]){m.userData.info=info;m.userData.category=category;m.userData.home=m.position.clone();m.userData.explode=new THREE.Vector3(...explode);clickable.push(m);return m}
-function componentInfo(name,kind,state,impl,source,description){return{name,kind,state,impl,source,description}}
-function glow(color=COLORS.cyan,intensity=3){return mat(color,{metal:.3,rough:.18,emit:color,intensity})}
+function viewerUrl(uid,viewMode='clean'){
+  const params=new URLSearchParams({autostart:'1',ui_infos:'0',ui_help:'0',ui_settings:'0',ui_vr:'0',ui_watermark:'1'});
+  if(viewMode==='clean')params.set('ui_controls','0');
+  if(viewMode==='controls')params.set('ui_controls','1');
+  if(viewMode==='spin'){params.set('ui_controls','0');params.set('autospin','0.22');}
+  return `https://sketchfab.com/models/${uid}/embed?${params.toString()}`;
+}
 
-function addCable(group,pts,color=0x4ac2e9){const curve=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));const m=mesh(new THREE.TubeGeometry(curve,36,.028,8,false),mat(color,{metal:.35,rough:.34}));m.userData.category='electronics';group.add(m)}
+function stopSimulation(){if(simTimer){clearInterval(simTimer);simTimer=null;}ui.simbox.style.display='none';}
 
-function buildSuit(){const g=new THREE.Group();const red=mat(COLORS.red),red2=mat(COLORS.red2),gold=mat(COLORS.gold,{metal:.82,rough:.22}),dark=mat(COLORS.dark),cyan=glow();
- const chest=register(box([2.15,2.5,.9],red,[0,.45,0]),componentInfo('CHEST SHELL','Blindagem 3D','CONCEITUAL','Visualização web','Modelo procedural','Carcaça externa usada como mapa dos subsistemas.'),'armor',[0,0,-1]);g.add(chest);
- g.add(register(box([1.25,1.05,.24],gold,[0,.8,.51]),componentInfo('PECTORAL PLATE','Blindagem 3D','CONCEITUAL','Visualização web','Modelo procedural','Placa frontal de acesso ao módulo central.'),'armor',[0,0,.65]));
- const reactor=register(cyl(.39,.39,.18,48,cyan,[0,.42,.66],[Math.PI/2,0,0]),componentInfo('ARC REACTOR','Módulo visual','SIMULAÇÃO VISUAL','Interativo','Modelo procedural','Atalho para o estudo visual do reator.'),'emitter',[0,0,1.1]);reactor.userData.route='reactor';g.add(reactor);
- g.add(register(box([1.38,1.1,.68],red2,[0,-1.05,-.05]),componentInfo('ABDOMINAL FRAME','Estrutura 3D','CONCEITUAL','Visualização web','Modelo procedural','Segmento mecânico para leitura da arquitetura.'),'mechanical',[0,-.7,-.3]));
- const head=new THREE.Group();head.position.set(0,2.65,0);const shell=register(mesh(new THREE.SphereGeometry(.78,40,28),gold),componentInfo('HELMET','Interface 3D','SIMULAÇÃO VISUAL','Interativo','Modelo procedural','Atalho para o módulo do capacete.'),'armor',[0,1.2,0]);shell.scale.set(.86,1.05,.92);shell.userData.route='helmet';head.add(shell);const back=box([1.2,.8,.82],red,[0,-.08,-.28]);back.userData.category='armor';head.add(back);const e1=box([.28,.07,.05],cyan,[-.3,.05,.68],[0,0,-.08]);const e2=e1.clone();e2.position.x=.3;e2.rotation.z=.08;head.add(e1,e2);g.add(head);
- [-1,1].forEach(side=>{const sh=register(mesh(new THREE.SphereGeometry(.68,28,20),red,[side*1.62,1.0,0]),componentInfo(side<0?'LEFT SHOULDER':'RIGHT SHOULDER','Blindagem 3D','CONCEITUAL','Visualização web','Modelo procedural','Proteção externa da articulação.'),'armor',[side*1.1,.3,0]);sh.scale.set(1.08,.82,1);g.add(sh);g.add(cyl(.45,.4,1.55,22,red2,[side*1.92,-.1,0],[0,0,side*.1]));const fore=register(cyl(.49,.38,1.55,22,red,[side*2.02,-1.58,.03],[0,0,side*.05]),componentInfo(side>0?'RIGHT GAUNTLET':'LEFT GAUNTLET','Módulo vestível','PROTÓTIPO EM DESENVOLVIMENTO',side>0?'Interativo':'Visualização web','Modelo procedural',side>0?'Atalho para a manopla e seus componentes planejados.':'Representação visual do antebraço.'),'armor',[side*.8,-.4,0]);if(side>0)fore.userData.route='gauntlet';g.add(fore);g.add(box([.75,.68,.4],gold,[side*2.02,-2.6,.05]));});return g}
+function setAssetInfo(asset){
+  ui.name.textContent=asset.name;ui.status.textContent=asset.uid?'EXTERNAL 3D':'SIMULATION';ui.description.textContent=asset.uid?'Metadados exibidos abaixo vêm da página do asset. O arquivo não é redistribuído por este projeto.':'Diagnóstico local explicitamente simulado; nenhum sensor está conectado ao site.';
+  ui.creator.textContent=asset.creator;ui.license.textContent=asset.license;ui.mesh.textContent=asset.mesh;ui.source.textContent=asset.source;
+  if(asset.url){ui.sourceLink.href=asset.url;ui.sourceLink.style.display='inline-flex';}else{ui.sourceLink.removeAttribute('href');ui.sourceLink.style.display='none';}
+  ui.credit.textContent=asset.credit;
+}
 
-function buildGauntlet(){const g=new THREE.Group();g.rotation.set(-.08,-.18,-.05);const red=mat(COLORS.red),red2=mat(COLORS.red2),gold=mat(COLORS.gold,{metal:.82,rough:.22}),metal=mat(COLORS.metal,{metal:.9,rough:.18}),dark=mat(COLORS.dark),elec=mat(COLORS.elec,{metal:.35,rough:.3,emit:0x082b35,intensity:.7}),cyan=glow();
- g.add(register(cyl(.95,1.12,1.9,12,red,[-2.65,0,0],[0,0,Math.PI/2]),componentInfo('FOREARM SHELL','Carcaça 3D','CONCEITUAL','Modelo mecânico de interface','Modelo procedural','Carcaça externa para representar a região onde a eletrônica será alojada.'),'armor',[-1.2,0,0]));
- g.add(register(cyl(.66,.7,2.12,18,metal,[-2.5,0,0],[0,0,Math.PI/2]),componentInfo('INNER FRAME','Estrutura mecânica','CONCEITUAL','Modelo mecânico de interface','Modelo procedural','Estrutura interna visual, ainda não validada fisicamente.'),'mechanical',[-.4,0,-.3]));
- g.add(register(box([.9,.26,.6],elec,[-2.45,.72,0]),componentInfo('ESP32 CONTROLLER','Controlador','FIRMWARE BASE EXISTENTE','ESP32 + FreeRTOS','Repositório do projeto','Representa o ESP32 usado no firmware base do protótipo.'),'electronics',[0,.8,0]));
- g.add(register(box([1.1,.34,.58],dark,[-2.65,-.7,0]),componentInfo('BATTERY SPACE','Alimentação','PLANEJADO','Ainda sem montagem física validada','Planejamento do projeto','Volume reservado para bateria e leitura de tensão.'),'electronics',[0,-.8,0]));
- g.add(register(cyl(.64,.69,.52,24,metal,[-1.22,0,0],[0,0,Math.PI/2]),componentInfo('WRIST JOINT','Articulação','CONCEITUAL','Modelo mecânico de interface','Modelo procedural','Transição mecânica entre antebraço e mão.'),'mechanical',[0,0,-.45]));
- g.add(register(box([1.48,1.4,.54],dark,[-.2,0,0]),componentInfo('PALM FRAME','Estrutura mecânica','CONCEITUAL','Modelo mecânico de interface','Modelo procedural','Estrutura de suporte da palma.'),'mechanical',[0,0,-.65]));
- g.add(register(box([1.5,1.42,.24],gold,[-.18,0,.4]),componentInfo('PALM ARMOR','Blindagem 3D','CONCEITUAL','Visualização web','Modelo procedural','Placa externa removível da representação 3D.'),'armor',[0,0,.85]));
- g.add(register(cyl(.34,.34,.14,40,cyan,[-.05,0,.61],[Math.PI/2,0,0]),componentInfo('PALM LIGHT','Feedback visual','SIMULAÇÃO VISUAL','Interface web','Modelo procedural','Luz de estado demonstrativa; não representa um emissor físico funcional.'),'emitter',[0,0,1]));
- g.add(register(box([.38,.15,.4],elec,[-.62,.42,-.34]),componentInfo('IMU','Sensor planejado','PLANEJADO','Próxima etapa física','Planejamento do projeto','IMU prevista para orientação e movimento; ainda não conectada nesta interface.'),'electronics',[0,.5,-.3]));
- const labels=['INDEX','MIDDLE','RING','LITTLE'];fingers=[];labels.forEach((name,i)=>{const fg=new THREE.Group();fg.position.set(.55,0,-.54+i*.36);fg.userData.homeRot=fg.rotation.clone();for(let s=0;s<3;s++){const seg=register(cyl(.16-s*.015,.18-s*.015,.52,14,s%2?red2:gold,[.34+s*.5,0,0],[0,0,Math.PI/2]),componentInfo(`${name} SEGMENT ${s+1}`,'Articulação 3D','SIMULAÇÃO MECÂNICA','Interativo','Modelo procedural','Segmento usado apenas para demonstrar a cinemática da mão.'),s%2?'mechanical':'armor',[.3+s*.18,0,0]);fg.add(seg)}fingers.push(fg);g.add(fg)});
- const thumb=new THREE.Group();thumb.position.set(.16,-.7,-.02);thumb.rotation.z=-.62;thumb.userData.homeRot=thumb.rotation.clone();for(let s=0;s<2;s++)thumb.add(register(cyl(.2-s*.02,.22-s*.02,.68,14,gold,[.4+s*.6,0,0],[0,0,Math.PI/2]),componentInfo(`THUMB SEGMENT ${s+1}`,'Articulação 3D','SIMULAÇÃO MECÂNICA','Interativo','Modelo procedural','Segmento demonstrativo do polegar.'),'armor',[.35+s*.18,0,0]));fingers.push(thumb);g.add(thumb);
- addCable(g,[[-3.05,.25,.5],[-2.3,.3,.54],[-1.5,.2,.44],[-.7,.1,.32],[.05,.15,.22]]);addCable(g,[[-3.05,-.28,-.48],[-2.2,-.38,-.52],[-1.45,-.24,-.4],[-.6,-.16,-.28],[.08,-.08,-.18]],0x8e6cff);return g}
+function setViewButtons(disabled){
+  ui.modes.forEach(b=>{b.disabled=disabled;b.classList.toggle('active',!disabled&&b.dataset.mode===mode)});
+}
 
-function buildHelmet(){const g=new THREE.Group();const red=mat(COLORS.red),gold=mat(COLORS.gold,{metal:.85,rough:.22}),metal=mat(COLORS.metal,{metal:.9,rough:.2}),elec=mat(COLORS.elec,{metal:.35,rough:.3,emit:0x082b35,intensity:.8}),cyan=glow();
- const shell=register(mesh(new THREE.SphereGeometry(1.58,52,36),red,[0,.25,0]),componentInfo('REAR SHELL','Carcaça 3D','CONCEITUAL','Visualização web','Modelo procedural','Carcaça traseira do capacete conceitual.'),'armor',[0,0,-.8]);shell.scale.set(.9,1.04,.86);g.add(shell);
- plate=new THREE.Group();plate.position.set(0,.28,1.18);plate.userData.homePos=plate.position.clone();plate.userData.homeRot=plate.rotation.clone();const face=register(box([1.82,1.78,.2],gold,[0,.02,0]),componentInfo('FACEPLATE','Mecanismo 3D','SIMULAÇÃO MECÂNICA','Interativo','Modelo procedural','Abertura do faceplate é uma simulação visual da cinemática.'),'armor',[0,1.2,.4]);face.scale.set(.86,1,1);plate.add(face);plate.add(box([1.18,.36,.24],red,[0,.84,-.02]));plate.add(box([1.22,.4,.3],gold,[0,-.88,.02]));const e1=register(box([.46,.1,.06],cyan,[-.46,.18,.15],[0,0,-.07]),componentInfo('LEFT OPTICAL ARRAY','Interface visual','SIMULAÇÃO VISUAL','HUD demonstrativo','Modelo procedural','Canal visual demonstrativo; sem sensor óptico real conectado.'),'emitter',[0,0,.2]);const e2=register(box([.46,.1,.06],cyan,[.46,.18,.15],[0,0,.07]),componentInfo('RIGHT OPTICAL ARRAY','Interface visual','SIMULAÇÃO VISUAL','HUD demonstrativo','Modelo procedural','Canal visual demonstrativo; sem sensor óptico real conectado.'),'emitter',[0,0,.2]);plate.add(e1,e2);g.add(plate);
- [-1,1].forEach(side=>g.add(register(cyl(.28,.28,.17,28,metal,[side*1.42,.2,0],[0,0,Math.PI/2]),componentInfo(side<0?'LEFT PIVOT':'RIGHT PIVOT','Pivô 3D','SIMULAÇÃO MECÂNICA','Interativo','Modelo procedural','Pivô visual do faceplate; não representa servo real instalado.'),'mechanical',[side*.55,0,0])));
- g.add(register(box([.9,.2,.45],elec,[0,1.14,-.28]),componentInfo('HUD CONTROLLER','Módulo lógico 3D','SIMULAÇÃO','Interface web','Modelo procedural','Representação conceitual do processamento do HUD.'),'electronics',[0,.45,-.3]));return g}
+function loadViewer(asset){
+  ui.diagnostic.hidden=true;ui.stage.style.display='block';ui.loader.style.display='grid';ui.stage.classList.remove('ready');
+  ui.frame.onload=()=>{ui.loader.style.display='none';ui.stage.classList.add('ready')};
+  ui.frame.src=viewerUrl(asset.uid,mode);
+}
 
-function buildReactor(){const g=new THREE.Group();g.rotation.x=-.22;const metal=mat(COLORS.metal,{metal:.92,rough:.18}),dark=mat(COLORS.dark),copper=mat(0xc6764c,{metal:.86,rough:.24}),cyan=glow(COLORS.cyan,4.5),elec=mat(COLORS.elec,{metal:.4,rough:.26,emit:0x062831,intensity:.6});
- g.add(register(mesh(new THREE.TorusGeometry(2.15,.17,18,80),metal),componentInfo('OUTER RING','Estrutura 3D','CONCEITUAL','Visualização web','Modelo procedural','Anel estrutural externo do estudo visual.'),'mechanical',[0,0,-1.2]));
- g.add(register(mesh(new THREE.TorusGeometry(1.5,.11,16,80),dark),componentInfo('INNER RING','Estrutura 3D','CONCEITUAL','Visualização web','Modelo procedural','Anel interno do estudo visual.'),'mechanical',[0,0,-.6]));
- g.add(mesh(new THREE.TorusGeometry(1.1,.08,16,80),cyan));
- core=register(cyl(.72,.72,.24,56,cyan,[0,0,0],[Math.PI/2,0,0]),componentInfo('CORE LIGHT','Núcleo visual','SIMULAÇÃO VISUAL','Interativo','Modelo procedural','Pulso de luz usado apenas como feedback da interface.'),'emitter',[0,0,1.15]);g.add(core);
- g.add(register(cyl(1.88,1.88,.11,56,elec,[0,0,-.34],[Math.PI/2,0,0]),componentInfo('BACKPLANE','Estrutura 3D','CONCEITUAL','Visualização web','Modelo procedural','Placa traseira conceitual do conjunto.'),'electronics',[0,0,-1.5]));
- for(let i=0;i<10;i++){const a=i/10*Math.PI*2;const m=register(box([.48,.68,.36],copper,[Math.cos(a)*1.84,Math.sin(a)*1.84,.05],[0,0,a]),componentInfo(`COIL ${String(i+1).padStart(2,'0')}`,'Bobina 3D','SIMULAÇÃO VISUAL','Selecionável','Modelo procedural','Bobina visual do estudo; não é uma medição nem um componente energizado real.'),'electronics',[Math.cos(a)*.8,Math.sin(a)*.8,.5]);g.add(m)}return g}
-function buildDiagnostics(){const g=buildGauntlet();g.scale.setScalar(.92);return g}
-const BUILD={suit:buildSuit,gauntlet:buildGauntlet,helmet:buildHelmet,reactor:buildReactor,diagnostics:buildDiagnostics};
+function loadModule(id){
+  const asset=ASSETS[id];if(!asset)return;current=id;hudActive=false;ui.hud.classList.remove('active');stopSimulation();
+  ui.nav.forEach(b=>b.classList.toggle('active',b.dataset.module===id));ui.eyebrow.textContent=asset.eyebrow;ui.title.textContent=asset.title;ui.desc.textContent=asset.desc;setAssetInfo(asset);
+  ui.hudBtn.disabled=id!=='helmet';ui.hudBtn.textContent=id==='helmet'?'ENTER HUD':'HUD LOCKED';ui.action.textContent=id==='diagnostics'?'RUN SIMULATION':'RESET MODEL';
+  ui.hint.textContent=id==='diagnostics'?'VALORES GERADOS LOCALMENTE • SEM SENSOR REAL':'ARRASTE PARA GIRAR • SCROLL PARA ZOOM';
+  if(id==='diagnostics'){
+    ui.frame.src='about:blank';ui.stage.style.display='none';ui.diagnostic.hidden=false;setViewButtons(true);
+  }else{setViewButtons(false);loadViewer(asset);}
+}
 
-function disposeObject(o){o.traverse(c=>{c.geometry?.dispose?.();if(c.material){(Array.isArray(c.material)?c.material:[c.material]).forEach(m=>m.dispose?.())}})}
-function fitCamera(object){const box3=new THREE.Box3().setFromObject(object);if(box3.isEmpty())return;const size=box3.getSize(new THREE.Vector3());const center=box3.getCenter(new THREE.Vector3());const max=Math.max(size.x,size.y,size.z);const fov=camera.fov*Math.PI/180;let dist=max/(2*Math.tan(fov/2));dist*=1.5;camera.position.set(center.x+dist*.52,center.y+dist*.28,center.z+dist);camera.near=Math.max(.05,dist/100);camera.far=dist*100;camera.updateProjectionMatrix();controls.target.copy(center);controls.update()}
-function build(name){clickable=[];selected=null;plate=null;fingers=[];core=null;disposeObject(root);scene.remove(root);root=BUILD[name]();scene.add(root);fitCamera(root);applyMode('assembled',false);inspect(null);setSimulationVisibility(name==='diagnostics')}
-function load(name){currentModule=name;currentMode='assembled';const m=MODULES[name];ui.eyebrow.textContent=m.eyebrow;ui.title.textContent=m.title;ui.desc.textContent=m.desc;ui.action.textContent=m.action;ui.nav.forEach(b=>b.classList.toggle('active',b.dataset.module===name));ui.modes.forEach(b=>b.classList.toggle('active',b.dataset.mode==='assembled'));ui.hudBtn.disabled=name!=='helmet';ui.hudBtn.style.opacity=name==='helmet'?'1':'.42';ui.hud.classList.remove('active');hud=false;build(name)}
-function setSimulationVisibility(on){ui.simbox.style.display=on?'block':'none';if(on){startSimulation()}else{stopSimulation()}}
-function startSimulation(){stopSimulation();tickSimulation();simTimer=setInterval(tickSimulation,900)}function stopSimulation(){if(simTimer)clearInterval(simTimer);simTimer=null}
-function tickSimulation(){ui.simFlex.textContent=`${Math.round(35+Math.random()*35)}% SIM`;ui.simPitch.textContent=`${(Math.random()*10-5).toFixed(1)}° SIM`;ui.simBattery.textContent=`${Math.round(78+Math.random()*10)}% SIM`}
-function inspect(m){selected=m;if(!m?.userData?.info){ui.name.textContent='SELECT A COMPONENT';ui.status.textContent='3D READY';ui.description.textContent='Clique em uma peça do modelo para ver apenas informações conhecidas ou explicitamente simuladas.';ui.kind.textContent='—';ui.state.textContent='—';ui.source.textContent='—';ui.impl.textContent='—';return}const i=m.userData.info;ui.name.textContent=i.name;ui.status.textContent=i.state;ui.description.textContent=i.description;ui.kind.textContent=i.kind;ui.state.textContent=i.state;ui.source.textContent=i.source;ui.impl.textContent=i.impl}
-function resetMaterial(m){if(!m.isMesh||!m.material)return;if(!m.userData.baseMat)m.userData.baseMat={opacity:m.material.opacity,wireframe:!!m.material.wireframe,depthWrite:m.material.depthWrite};m.material.opacity=m.userData.baseMat.opacity;m.material.wireframe=m.userData.baseMat.wireframe;m.material.depthWrite=m.userData.baseMat.depthWrite;m.material.transparent=true}
-function applyMode(mode,log=true){currentMode=mode;exploded=mode==='exploded';ui.modes.forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));root.traverse(o=>{if(!o.isMesh)return;resetMaterial(o);const c=o.userData.category;if(mode==='structure'&&c==='armor'){o.material.opacity=.12;o.material.depthWrite=false}if(mode==='electronics'){if(c==='armor'){o.material.opacity=.05;o.material.depthWrite=false}else if(c==='mechanical'){o.material.opacity=.2;o.material.depthWrite=false}}if(mode==='xray'&&c==='armor'){o.material.opacity=.08;o.material.wireframe=true;o.material.depthWrite=false}});clickable.forEach(o=>{const target=o.userData.home?.clone?.()||o.position.clone();if(mode==='exploded'&&o.userData.explode)target.add(o.userData.explode);o.userData.targetPos=target})}
-function doAction(){if(currentModule==='helmet'&&plate){const open=!plate.userData.open;plate.userData.open=open;ui.action.textContent=open?'CLOSE FACEPLATE':'OPEN FACEPLATE';plate.userData.targetPos=open?new THREE.Vector3(0,2.1,.42):plate.userData.homePos.clone();plate.userData.targetRot=open?new THREE.Euler(-1,0,0):plate.userData.homeRot.clone()}else if(currentModule==='gauntlet'||currentModule==='diagnostics'){const closed=!root.userData.closed;root.userData.closed=closed;ui.action.textContent=closed?'OPEN HAND':'ACTUATE FINGERS';fingers.forEach((f,i)=>{const r=f.userData.homeRot?.clone?.()||f.rotation.clone();if(closed)r.z-=i===4?.42:.7+i*.03;f.userData.targetRot=r})}else if(currentModule==='reactor'&&core){core.userData.pulse=1}else if(currentModule==='suit'){applyMode(currentMode==='exploded'?'assembled':'exploded')}else if(currentModule==='diagnostics'){tickSimulation()}}
-function toggleHud(){if(currentModule!=='helmet')return;hud=!hud;ui.hud.classList.toggle('active',hud);ui.hudBtn.textContent=hud?'EXIT HUD':'ENTER HUD'}
+function reloadViewer(){const asset=ASSETS[current];if(!asset.uid)return;loadViewer(asset);}
 
-const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();function hitFrom(e){const r=ui.canvas.getBoundingClientRect();pointer.x=(e.clientX-r.left)/r.width*2-1;pointer.y=-((e.clientY-r.top)/r.height*2-1);ray.setFromCamera(pointer,camera);return ray.intersectObjects(clickable,true).find(h=>h.object.userData.info)?.object||null}
-let down=null;ui.canvas.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);ui.canvas.addEventListener('pointerup',e=>{if(!down)return;const d=Math.hypot(e.clientX-down[0],e.clientY-down[1]);down=null;if(d>7)return;const m=hitFrom(e);if(!m)return;if(m.userData.route){load(m.userData.route);return}inspect(m)});ui.canvas.addEventListener('pointermove',e=>ui.canvas.style.cursor=hitFrom(e)?'pointer':'grab');
-ui.nav.forEach(b=>b.addEventListener('click',()=>load(b.dataset.module)));ui.modes.forEach(b=>b.addEventListener('click',()=>applyMode(b.dataset.mode)));ui.action.addEventListener('click',doAction);ui.hudBtn.addEventListener('click',toggleHud);ui.reset.addEventListener('click',()=>fitCamera(root));
+function setMode(next){
+  if(current==='diagnostics')return;
+  if(next==='fullscreen'){
+    const viewport=$('#viewport');if(viewport.requestFullscreen)viewport.requestFullscreen();return;
+  }
+  mode=next;ui.modes.forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));reloadViewer();
+}
 
-function resize(){const r=ui.wrap.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
-function animateObject(o){if(o.userData.targetPos)o.position.lerp(o.userData.targetPos,.09);if(o.userData.targetRot){o.rotation.x+=(o.userData.targetRot.x-o.rotation.x)*.09;o.rotation.y+=(o.userData.targetRot.y-o.rotation.y)*.09;o.rotation.z+=(o.userData.targetRot.z-o.rotation.z)*.09}}
-function loop(){requestAnimationFrame(loop);resize();root.traverse(animateObject);if(core?.userData?.pulse){const p=core.userData.pulse;core.scale.setScalar(1+p*.36);core.userData.pulse*=.91;if(core.userData.pulse<.01){core.userData.pulse=0;core.scale.setScalar(1)}}controls.update();renderer.render(scene,camera)}
+function toggleHud(){if(current!=='helmet')return;hudActive=!hudActive;ui.hud.classList.toggle('active',hudActive);ui.hudBtn.textContent=hudActive?'EXIT HUD':'ENTER HUD';}
 
-try{load('suit');new ResizeObserver(resize).observe(ui.wrap);requestAnimationFrame(loop)}catch(err){console.error(err);ui.error.classList.add('show');ui.error.innerHTML=`<div><b>O 3D não conseguiu iniciar.</b><br>Recarregue a página. Se persistir, abra em Chrome/Edge atualizado.</div>`}
+function runSimulation(){
+  if(current!=='diagnostics')return;ui.simbox.style.display='block';
+  const tick=()=>{ui.simFlex.textContent=`SIM ${Math.round(25+Math.random()*55)}%`;ui.simPitch.textContent=`SIM ${(Math.random()*12-6).toFixed(1)}°`;ui.simBattery.textContent=`SIM ${Math.round(65+Math.random()*28)}%`;};
+  tick();if(simTimer)clearInterval(simTimer);simTimer=setInterval(tick,850);
+}
+
+ui.nav.forEach(b=>b.addEventListener('click',()=>loadModule(b.dataset.module)));
+ui.modes.forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+ui.reset.addEventListener('click',reloadViewer);
+ui.action.addEventListener('click',()=>current==='diagnostics'?runSimulation():reloadViewer());
+ui.hudBtn.addEventListener('click',toggleHud);
+
+loadModule('suit');
