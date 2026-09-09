@@ -1,7 +1,6 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/loaders/GLTFLoader.js';
-import { STLExporter } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/exporters/STLExporter.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -12,7 +11,7 @@ const ui = {
   modes: $$('.mode'), fit: $('#fitView'), reset: $('#resetView'), hudBtn: $('#hudButton'), fullscreen: $('#fullscreenButton'), hud: $('#hud'),
   assemble: $('#assembleAll'), open: $('#openSelected'), close: $('#closeSelected'), isolate: $('#isolateSelected'), showAll: $('#showAll'), explode: $('#explodeRange'),
   name: $('#componentName'), status: $('#componentStatus'), description: $('#componentDesc'), triangles: $('#factTriangles'), bounds: $('#factBounds'), units: $('#factUnits'), print: $('#factPrint'),
-  exportStl: $('#exportStl'), partCount: $('#partCount'), partSearch: $('#partSearch'), partsList: $('#partsList'), selectionLabel: $('#selectionLabel'),
+  meshCheck: $('#meshCheck'), partCount: $('#partCount'), partSearch: $('#partSearch'), partsList: $('#partsList'), selectionLabel: $('#selectionLabel'),
   simbox: $('#simbox'), simFlex: $('#simFlex'), simPitch: $('#simPitch'), simBattery: $('#simBattery'), note: $('#noteBox')
 };
 
@@ -23,10 +22,10 @@ const SOURCES = {
 };
 
 const MODULES = {
-  suit: { eyebrow: 'ASSEMBLY // FULL SUIT', title: 'SUIT OVERVIEW', desc: 'Montagem completa em viewer nativo: seleção de partes, materiais, explode e STL por peça.', source: 'suit' },
+  suit: { eyebrow: 'ASSEMBLY // FULL SUIT', title: 'SUIT OVERVIEW', desc: 'Montagem completa em viewer nativo: seleção de partes, materiais e desmontagem visual.', source: 'suit' },
   gauntlet: { eyebrow: 'ASSEMBLY // ARM SECTION', title: 'GAUNTLET', desc: 'Recorte do conjunto de braço/mão para inspeção e desmontagem visual.', source: 'suit', crop: 'arm' },
   helmet: { eyebrow: 'ASSEMBLY // HELMET SHELL', title: 'HELMET', desc: 'Capacete detalhado com peças selecionáveis e prévia de abertura/desmontagem.', source: 'helmet' },
-  reactor: { eyebrow: 'ASSEMBLY // REACTOR', title: 'ARC REACTOR', desc: 'Conjunto detalhado com peças individuais, wireframe, explode e inspeção de malha.', source: 'reactor' },
+  reactor: { eyebrow: 'ASSEMBLY // REACTOR', title: 'ARC REACTOR', desc: 'Conjunto detalhado com peças individuais, wireframe e explode.', source: 'reactor' },
   diagnostics: { eyebrow: 'SIMULATION // NO HARDWARE LINK', title: 'DIAGNOSTICS', desc: 'Valores gerados localmente apenas para testar a interface. Nenhum sensor real está conectado.' }
 };
 
@@ -69,7 +68,6 @@ const fill = new THREE.DirectionalLight(0xb9a8ff, 1.0); fill.position.set(1, -2,
 const grid = new THREE.GridHelper(20, 30, 0x1b4250, 0x0d2530); grid.material.transparent = true; grid.material.opacity = 0.13; scene.add(grid);
 
 const gltfLoader = new GLTFLoader();
-const stlExporter = new STLExporter();
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
@@ -78,7 +76,6 @@ const printMaterial = new THREE.MeshStandardMaterial({ color: 0xe3e5e4, metalnes
 const wireMaterial = new THREE.MeshBasicMaterial({ color: 0x83dcf4, wireframe: true, transparent: true, opacity: 0.82 });
 
 function render() {
-  if (!renderer || !camera) return;
   if (selectionHelper) selectionHelper.update();
   renderer.render(scene, camera);
 }
@@ -133,7 +130,7 @@ function clearSelection() {
   ui.description.textContent = currentModule === 'diagnostics' ? 'Nenhuma leitura desta tela vem de hardware real.' : 'Clique no modelo ou use a lista de peças. Nenhuma dimensão em milímetros é assumida sem calibração do modelo.';
   ui.triangles.textContent = '—';
   ui.bounds.textContent = '—';
-  ui.exportStl.disabled = true;
+  ui.meshCheck.disabled = true;
   ui.selectionLabel.textContent = 'NO PART SELECTED';
   $$('.parts-list button').forEach((b) => b.classList.remove('active'));
   setPartActions();
@@ -257,12 +254,12 @@ function selectPart(part) {
   const s = b.getSize(new THREE.Vector3());
   ui.name.textContent = part.userData.label;
   ui.status.textContent = 'SELECTED';
-  ui.description.textContent = 'Peça visual selecionada. OPEN/CLOSE é apenas uma prévia de desmontagem; não representa uma dobradiça validada.';
+  ui.description.textContent = 'Peça visual selecionada. OPEN/CLOSE é somente uma prévia de desmontagem e não representa uma dobradiça física validada.';
   ui.triangles.textContent = geometryTriangles(part).toLocaleString('pt-BR');
   ui.bounds.textContent = `${s.x.toFixed(3)} × ${s.y.toFixed(3)} × ${s.z.toFixed(3)} u`;
   ui.units.textContent = 'SOURCE / UNCALIBRATED';
   ui.print.textContent = 'VISUAL MESH • NOT VALIDATED';
-  ui.exportStl.disabled = false;
+  ui.meshCheck.disabled = false;
   ui.selectionLabel.textContent = part.userData.label;
   $$('.parts-list button').forEach((b) => b.classList.toggle('active', Number(b.dataset.index) === part.userData.partIndex));
   setPartActions();
@@ -326,30 +323,12 @@ function showAll() {
   render();
 }
 
-function exportSelectedStl() {
+function runMeshCheck() {
   if (!selected) return;
-  const oldPos = selected.position.clone();
-  const oldQuat = selected.quaternion.clone();
-  selected.position.copy(selected.userData.homePosition);
-  selected.quaternion.copy(selected.userData.homeQuaternion);
-  selected.updateMatrixWorld(true);
-
-  const stl = stlExporter.parse(selected, { binary: false });
-  const blob = new Blob([stl], { type: 'model/stl' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const safe = selected.userData.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'part';
-  a.href = url;
-  a.download = `${currentModule}-${safe}.stl`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-
-  selected.position.copy(oldPos);
-  selected.quaternion.copy(oldQuat);
-  selected.updateMatrixWorld(true);
-  render();
+  applyMaterialMode('print');
+  isolateSelected();
+  fitModel();
+  ui.note.innerHTML = '<b>Print preview:</b> a peça está isolada em material neutro para inspeção visual. As unidades continuam sem calibração e nenhuma validação física é feita.';
 }
 
 function fitModel() {
@@ -426,7 +405,7 @@ function loadGltf(url, token, config) {
 }
 
 function setFabricationEnabled(enabled) {
-  [...ui.modes, ui.assemble, ui.open, ui.close, ui.isolate, ui.showAll, ui.exportStl, ui.explode].forEach((el) => { el.disabled = !enabled; });
+  [...ui.modes, ui.assemble, ui.open, ui.close, ui.isolate, ui.showAll, ui.meshCheck, ui.explode].forEach((el) => { el.disabled = !enabled; });
   if (enabled) setPartActions();
 }
 
@@ -470,7 +449,8 @@ function loadModule(id) {
   }
 
   setFabricationEnabled(true);
-  ui.note.innerHTML = '<b>Fabrication preview:</b> STL exporta a geometria selecionada como ela existe no asset. Isso não confirma escala, espessura, encaixe ou segurança para uso físico. O projeto não inclui mecanismos funcionais de arma.';
+  ui.meshCheck.disabled = true;
+  ui.note.innerHTML = '<b>Fabrication preview:</b> a tela ajuda a estudar malha, separação e montagem visual. Ela não gera uma peça pronta para impressão nem valida escala, espessura, encaixe ou segurança física.';
   ui.loader.classList.remove('hidden');
   ui.status.textContent = 'LOADING';
   const token = loadToken;
@@ -503,7 +483,7 @@ ui.open.addEventListener('click', () => { if (selected) { selected.userData.open
 ui.close.addEventListener('click', () => { if (selected) { selected.userData.openAmount = 0; applyAssemblyTransforms(); } });
 ui.isolate.addEventListener('click', isolateSelected);
 ui.showAll.addEventListener('click', showAll);
-ui.exportStl.addEventListener('click', exportSelectedStl);
+ui.meshCheck.addEventListener('click', runMeshCheck);
 ui.fit.addEventListener('click', fitModel);
 ui.reset.addEventListener('click', () => { assembleAll(); fitModel(); });
 ui.fullscreen.addEventListener('click', () => ui.viewport.requestFullscreen?.());
