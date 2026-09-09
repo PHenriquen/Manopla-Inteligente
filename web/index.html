@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#05080d" />
-  <title>STARK LAB // Manopla Inteligente</title>
+  <title>STARK LAB // Fabrication Viewer</title>
   <link rel="stylesheet" href="aether.css" />
 </head>
 <body>
@@ -14,77 +14,85 @@
         <span class="brandmark">SL</span>
         <div>
           <b>STARK LAB</b>
-          <small>INTERACTIVE MECHATRONICS LABORATORY</small>
+          <small>INTERACTIVE FABRICATION LABORATORY</small>
         </div>
       </div>
       <div class="status">
-        <span>3D <strong>HIGH-FIDELITY</strong></span>
+        <span>VIEWER <strong>NATIVE 3D</strong></span>
+        <span>MODE <strong>FABRICATION</strong></span>
         <span>DATA <strong>NO HARDWARE LINK</strong></span>
-        <span class="simtag">SIMULAÇÕES IDENTIFICADAS</span>
       </div>
     </header>
 
     <aside class="side glass">
-      <p class="eyebrow">MARK III // SYSTEMS</p>
+      <p class="eyebrow">MARK III // ASSEMBLIES</p>
       <nav class="nav" aria-label="Módulos">
-        <button class="active" data-module="suit"><span>00</span><div><b>SUIT OVERVIEW</b><small>Armadura completa</small></div></button>
-        <button data-module="gauntlet"><span>01</span><div><b>GAUNTLET</b><small>Mão / conjunto vestível</small></div></button>
-        <button data-module="helmet"><span>02</span><div><b>HELMET</b><small>Mark III detalhado</small></div></button>
-        <button data-module="reactor"><span>03</span><div><b>ARC REACTOR</b><small>Modelo detalhado</small></div></button>
+        <button class="active" data-module="suit"><span>00</span><div><b>SUIT OVERVIEW</b><small>Montagem completa</small></div></button>
+        <button data-module="gauntlet"><span>01</span><div><b>GAUNTLET</b><small>Recorte do braço / mão</small></div></button>
+        <button data-module="helmet"><span>02</span><div><b>HELMET</b><small>Shell + peças separadas</small></div></button>
+        <button data-module="reactor"><span>03</span><div><b>ARC REACTOR</b><small>Conjunto mecânico</small></div></button>
         <button data-module="diagnostics"><span>04</span><div><b>DIAGNOSTICS</b><small>Simulação explícita</small></div></button>
       </nav>
 
       <div class="truth">
-        <p class="eyebrow">PROJETO REAL</p>
-        <b>ESP32 + firmware base + FreeRTOS + protocolo serial com CRC16.</b><br />
-        Sensores físicos e integração em tempo real continuam como próxima etapa do protótipo.
+        <p class="eyebrow">FABRICATION VIEW</p>
+        <b>Visualização de montagem, desmontagem e preparação de malha.</b><br />
+        As peças 3D são tratadas como prop/display. Os movimentos são prévias de montagem, não mecanismos físicos validados.
       </div>
     </aside>
 
     <section class="main">
       <div class="head">
         <div>
-          <p class="eyebrow" id="moduleEyebrow">MARK III // HIGH-FIDELITY ASSET</p>
+          <p class="eyebrow" id="moduleEyebrow">ASSEMBLY // NATIVE 3D</p>
           <h1 id="moduleTitle">SUIT OVERVIEW</h1>
-          <p id="moduleDesc">Modelo 3D externo de maior fidelidade integrado ao laboratório.</p>
+          <p id="moduleDesc">Inspecione partes, altere materiais, desmonte a montagem e exporte uma peça selecionada.</p>
         </div>
         <div class="head-actions">
+          <button class="ghost" id="fitView">FIT MODEL</button>
           <button class="ghost" id="resetView">RESET VIEW</button>
         </div>
       </div>
 
       <div class="viewport" id="viewport">
-        <div class="model-stage" id="modelStage">
-          <div class="loader" id="modelLoader"><span></span><small>LOADING 3D ASSET</small></div>
-          <iframe id="modelFrame" title="3D model viewer" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
-        </div>
-
+        <canvas id="labCanvas"></canvas>
+        <div class="loader" id="modelLoader"><span></span><small>LOADING FABRICATION MESH</small></div>
         <div class="diagnostic-stage" id="diagnosticStage" hidden>
           <div class="diagnostic-orbit"><span></span><i></i><b>SIM</b></div>
           <p>LOCAL INTERFACE SIMULATION</p>
           <small>sem hardware conectado</small>
         </div>
-
         <div class="hud" id="hud">
-          <div class="tl">HUD // SIMULAÇÃO<br>SEM SENSOR REAL</div>
-          <div class="tr">OPTICS<br>DEMO MODE</div>
-          <div class="bl">DATA SOURCE<br>3D VIEWER</div>
+          <div class="tl">HUD // SIMULAÇÃO<br />SEM SENSOR REAL</div>
+          <div class="tr">OPTICS<br />DEMO MODE</div>
+          <div class="bl">DATA SOURCE<br />LOCAL VIEWER</div>
           <div class="br">NO LIVE TELEMETRY</div>
         </div>
-
-        <div class="hint" id="viewHint">ARRASTE PARA GIRAR • SCROLL PARA ZOOM</div>
-        <div class="asset-credit" id="assetCredit"></div>
+        <div class="selection-label" id="selectionLabel">NO PART SELECTED</div>
+        <div class="hint" id="viewHint">ARRASTE PARA GIRAR • SCROLL PARA ZOOM • CLIQUE PARA SELECIONAR UMA PEÇA</div>
       </div>
 
-      <div class="modes glass">
-        <span class="label">VIEW</span>
-        <button class="mode active" data-mode="clean">CLEAN</button>
-        <button class="mode" data-mode="controls">CONTROLS</button>
-        <button class="mode" data-mode="spin">AUTO ROTATE</button>
-        <button class="mode" data-mode="fullscreen">FULLSCREEN</button>
-        <div class="context">
-          <button class="primary" id="contextAction">RESET MODEL</button>
-          <button class="secondary" id="hudButton" disabled>HUD LOCKED</button>
+      <div class="tool-stack">
+        <div class="modes glass">
+          <span class="label">MATERIAL</span>
+          <button class="mode active" data-mode="color">COLOR</button>
+          <button class="mode" data-mode="mono">MONO</button>
+          <button class="mode" data-mode="print">PRINT PREVIEW</button>
+          <button class="mode" data-mode="wire">WIREFRAME</button>
+          <div class="context">
+            <button class="secondary" id="hudButton" disabled>HUD LOCKED</button>
+            <button class="secondary" id="fullscreenButton">FULLSCREEN</button>
+          </div>
+        </div>
+
+        <div class="assembly-tools glass">
+          <span class="label">ASSEMBLY</span>
+          <button id="assembleAll">ASSEMBLE</button>
+          <button id="openSelected">OPEN SELECTED</button>
+          <button id="closeSelected">CLOSE SELECTED</button>
+          <button id="isolateSelected">ISOLATE</button>
+          <button id="showAll">SHOW ALL</button>
+          <label class="explode-control"><span>EXPLODE</span><input id="explodeRange" type="range" min="0" max="100" value="0" /></label>
         </div>
       </div>
     </section>
@@ -92,22 +100,31 @@
     <aside class="inspector glass">
       <div class="row">
         <div>
-          <p class="eyebrow">ASSET INSPECTOR</p>
-          <h2 id="componentName">IRON MAN SUIT</h2>
+          <p class="eyebrow">PART / FABRICATION</p>
+          <h2 id="componentName">SELECT A PART</h2>
         </div>
-        <span class="pill" id="componentStatus">EXTERNAL 3D</span>
+        <span class="pill" id="componentStatus">READY</span>
       </div>
 
-      <p class="desc" id="componentDesc">Informações abaixo vêm da página do próprio asset ou do repositório do projeto.</p>
+      <p class="desc" id="componentDesc">Clique no modelo ou use a lista de peças. Nenhuma dimensão em milímetros é assumida sem calibração do modelo.</p>
 
       <div class="facts">
-        <div class="fact"><span>CRIADOR</span><b id="factCreator">—</b></div>
-        <div class="fact"><span>LICENÇA</span><b id="factLicense">—</b></div>
-        <div class="fact"><span>MALHA</span><b id="factMesh">—</b></div>
-        <div class="fact"><span>ORIGEM</span><b id="factSource">—</b></div>
+        <div class="fact"><span>TRIANGLES</span><b id="factTriangles">—</b></div>
+        <div class="fact"><span>BOUNDS</span><b id="factBounds">—</b></div>
+        <div class="fact"><span>MODEL UNITS</span><b id="factUnits">SOURCE / UNCALIBRATED</b></div>
+        <div class="fact"><span>PRINT STATUS</span><b id="factPrint">VISUAL MESH • NOT VALIDATED</b></div>
       </div>
 
-      <a class="source-link" id="sourceLink" target="_blank" rel="noopener noreferrer">VIEW ORIGINAL ASSET</a>
+      <div class="export-row">
+        <button class="primary wide" id="exportStl" disabled>EXPORT SELECTED STL</button>
+      </div>
+
+      <div class="parts-head">
+        <span>PARTS</span>
+        <b id="partCount">0</b>
+      </div>
+      <input class="part-search" id="partSearch" type="search" placeholder="Filter parts..." autocomplete="off" />
+      <div class="parts-list" id="partsList"></div>
 
       <section class="simbox" id="simbox" style="display:none">
         <div class="simhead"><span>DIAGNÓSTICO LOCAL</span><b>SIMULAÇÃO</b></div>
@@ -119,7 +136,7 @@
       </section>
 
       <div class="note" id="noteBox">
-        O site não apresenta temperatura, carga, potência ou telemetria como dados reais. Valores variáveis aparecem somente em <b>Diagnostics</b> e ficam marcados como <b>SIM</b>.
+        <b>Fabrication preview:</b> STL exporta a geometria selecionada como ela existe no asset. Isso não confirma escala, espessura, encaixe ou segurança para uso físico. O projeto não inclui mecanismos funcionais de arma.
       </div>
     </aside>
   </main>
