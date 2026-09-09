@@ -3,63 +3,181 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manopla Inteligente</title>
+    <meta name="theme-color" content="#05070a" />
+    <title>STARK LAB // Manopla Inteligente</title>
     <link rel="stylesheet" href="styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+        }
+      }
+    </script>
   </head>
   <body>
-    <main class="dashboard">
-      <section class="hero">
-        <div>
-          <p class="eyebrow">IoT • Sistemas Embarcados • Prototipagem</p>
-          <h1>MANOPLA INTELIGENTE</h1>
-          <p class="description">
-            Protótipo inspirado nas interfaces tecnológicas do Homem de Ferro,
-            com foco em gestos, feedback visual e tátil, telemetria e integração
-            entre hardware e software.
-          </p>
+    <div class="boot" id="bootScreen" aria-hidden="true">
+      <div class="boot-core"></div>
+      <p>INITIALIZING STARK LAB</p>
+      <span>MECHATRONICS INTERFACE // v2.0</span>
+    </div>
+
+    <main class="app-shell">
+      <header class="topbar glass">
+        <div class="brand">
+          <span class="brand-mark">SL</span>
+          <div>
+            <strong>STARK LAB</strong>
+            <small>INTERACTIVE MECHATRONICS LABORATORY</small>
+          </div>
         </div>
-        <div class="panel status-panel">
-          <h2>Status da manopla</h2>
-          <div class="status-row">
-            <span>Estado</span>
-            <strong id="stateValue">Pronto</strong>
+
+        <div class="top-status">
+          <span><i class="status-dot online"></i> SYSTEM <b id="systemStatus">ONLINE</b></span>
+          <span>LINK <b id="linkStatus">SIMULATION</b></span>
+          <span>FPS <b id="fpsValue">60</b></span>
+          <span class="clock" id="clockValue">00:00:00</span>
+        </div>
+      </header>
+
+      <aside class="sidebar glass">
+        <p class="section-label">MARK III // SYSTEMS</p>
+        <nav class="module-nav" aria-label="Módulos do laboratório">
+          <button class="nav-item active" data-module="suit">
+            <span class="nav-index">00</span>
+            <span><b>SUIT OVERVIEW</b><small>Arquitetura completa</small></span>
+          </button>
+          <button class="nav-item" data-module="gauntlet">
+            <span class="nav-index">01</span>
+            <span><b>GAUNTLET</b><small>Mecânica + sensores</small></span>
+          </button>
+          <button class="nav-item" data-module="helmet">
+            <span class="nav-index">02</span>
+            <span><b>HELMET</b><small>HUD + faceplate</small></span>
+          </button>
+          <button class="nav-item" data-module="reactor">
+            <span class="nav-index">03</span>
+            <span><b>ARC REACTOR</b><small>Núcleo + bobinas</small></span>
+          </button>
+          <button class="nav-item" data-module="diagnostics">
+            <span class="nav-index">04</span>
+            <span><b>DIAGNOSTICS</b><small>Telemetria em tempo real</small></span>
+          </button>
+        </nav>
+
+        <div class="hardware-card">
+          <span class="eyebrow">PROTOTYPE HARDWARE</span>
+          <strong>ESP32 // MK-I</strong>
+          <div class="mini-spec"><span>Sensor flex</span><b>ARMED</b></div>
+          <div class="mini-spec"><span>IMU</span><b>SIM</b></div>
+          <div class="mini-spec"><span>Haptic</span><b>READY</b></div>
+          <div class="mini-spec"><span>Telemetry</span><b>20 Hz</b></div>
+        </div>
+      </aside>
+
+      <section class="viewport-panel">
+        <div class="viewport-head">
+          <div>
+            <p class="eyebrow" id="moduleEyebrow">MARK III // ASSEMBLY</p>
+            <h1 id="moduleTitle">SUIT OVERVIEW</h1>
+            <p id="moduleDescription">Explore a arquitetura da armadura e selecione um subsistema.</p>
           </div>
-          <div class="status-row">
-            <span>Gesto</span>
-            <strong id="gestureValue">Open Hand</strong>
+          <div class="viewport-actions">
+            <button class="icon-btn" id="resetView" title="Resetar câmera">RESET VIEW</button>
+            <button class="icon-btn" id="togglePower" title="Ligar/desligar sistema">POWER</button>
           </div>
-          <div class="status-row">
-            <span>Energia</span>
-            <strong id="powerValue">87%</strong>
+        </div>
+
+        <div class="viewport-wrap" id="viewportWrap">
+          <canvas id="labCanvas"></canvas>
+          <div class="scanlines"></div>
+          <div class="corner corner-tl"></div>
+          <div class="corner corner-tr"></div>
+          <div class="corner corner-bl"></div>
+          <div class="corner corner-br"></div>
+
+          <div class="viewport-hint" id="viewportHint">
+            ARRASTE PARA GIRAR • SCROLL PARA ZOOM • CLIQUE NAS PEÇAS
+          </div>
+
+          <div class="hud-overlay" id="hudOverlay" aria-hidden="true">
+            <div class="hud-reticle"><span></span></div>
+            <div class="hud-line top-left">OPTICS // ACTIVE<br /><b>TRACKING ENABLED</b></div>
+            <div class="hud-line top-right">ALT 000.0<br /><b>SPD 000</b></div>
+            <div class="hud-line bottom-left">POWER <b id="hudPower">87%</b><br />CORE STABLE</div>
+            <div class="hud-line bottom-right">TARGET <b>2.43 m</b><br />NO THREAT</div>
+          </div>
+
+          <div class="diagnostic-overlay" id="diagnosticOverlay" aria-hidden="true">
+            <div class="diag-grid">
+              <article><span>FLEX SENSOR</span><strong id="diagFlex">42%</strong><i><em id="barFlex"></em></i></article>
+              <article><span>IMU PITCH</span><strong id="diagPitch">+03.4°</strong><i><em id="barPitch"></em></i></article>
+              <article><span>BATTERY</span><strong id="diagBattery">87%</strong><i><em id="barBattery"></em></i></article>
+              <article><span>HAPTIC MOTOR</span><strong id="diagHaptic">READY</strong><i><em id="barHaptic"></em></i></article>
+            </div>
+            <div class="telemetry-stream" id="telemetryStream"></div>
+          </div>
+        </div>
+
+        <div class="mode-strip glass-inset">
+          <span class="section-label">VIEW MODE</span>
+          <div class="segmented" id="viewModes">
+            <button class="mode-btn active" data-mode="assembled">ASSEMBLED</button>
+            <button class="mode-btn" data-mode="structure">STRUCTURE</button>
+            <button class="mode-btn" data-mode="electronics">ELECTRONICS</button>
+            <button class="mode-btn" data-mode="exploded">EXPLODED</button>
+            <button class="mode-btn" data-mode="xray">X-RAY</button>
+          </div>
+          <div class="context-actions">
+            <button class="action-btn" id="contextAction">OPEN FACEPLATE</button>
+            <button class="action-btn secondary" id="hudButton">ENTER HUD</button>
           </div>
         </div>
       </section>
 
-      <section class="controls">
-        <div class="panel">
-          <h3>Controle</h3>
-          <button id="powerButton">Ligar sistema</button>
-          <select id="gestureSelect">
-            <option value="Open Hand">Open Hand</option>
-            <option value="Fist">Fist</option>
-            <option value="Point">Point</option>
-            <option value="Wave">Wave</option>
-          </select>
+      <aside class="inspector glass">
+        <div class="inspector-head">
+          <div>
+            <p class="section-label">COMPONENT INSPECTOR</p>
+            <h2 id="componentName">SYSTEM READY</h2>
+          </div>
+          <span class="chip" id="componentStatus">ONLINE</span>
         </div>
 
-        <div class="panel">
-          <h3>Feedback visual</h3>
-          <div id="ledRing"></div>
-          <p id="feedbackText">Sistema pronto para interação</p>
+        <div class="component-id" id="componentId">MK3-SYS-000</div>
+        <p class="component-copy" id="componentDescription">
+          Clique em uma peça do modelo para inspecionar função, estado e parâmetros técnicos.
+        </p>
+
+        <div class="spec-grid">
+          <div><span>STATE</span><b id="specState">NOMINAL</b></div>
+          <div><span>LOAD</span><b id="specLoad">18%</b></div>
+          <div><span>TEMP</span><b id="specTemp">31°C</b></div>
+          <div><span>BUS</span><b id="specBus">ACTIVE</b></div>
         </div>
 
-        <div class="panel">
-          <h3>Log do sistema</h3>
-          <ul id="logList"></ul>
+        <section class="telemetry-card">
+          <div class="telemetry-title"><span>LIVE TELEMETRY</span><b id="telemetryHz">20 Hz</b></div>
+          <canvas id="telemetryChart" width="360" height="120"></canvas>
+          <div class="telemetry-values">
+            <span>FLEX <b id="flexValue">42%</b></span>
+            <span>IMU <b id="imuValue">+03.4°</b></span>
+            <span>BAT <b id="batteryValue">87%</b></span>
+          </div>
+        </section>
+
+        <section class="log-card">
+          <div class="telemetry-title"><span>EVENT LOG</span><button id="clearLog">CLEAR</button></div>
+          <ul id="eventLog"></ul>
+        </section>
+
+        <div class="inspector-footer">
+          <span>ESP32 SERIAL PROTOCOL</span>
+          <b>CRC16 // SEQ <i id="sequenceValue">0001</i></b>
         </div>
-      </section>
+      </aside>
     </main>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>
