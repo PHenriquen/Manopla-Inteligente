@@ -1,10 +1,15 @@
 # Manopla Inteligente
 
-A Manopla Inteligente é um projeto pessoal para estudar a ligação entre **ESP32, sensores, firmware e uma peça vestível**.
+A **Manopla Inteligente** é um projeto pessoal de mecatrônica e sistemas embarcados para estudar a ligação entre **ESP32, sensores, firmware, telemetria, mecânica digital e uma peça vestível**.
 
-A ideia é chegar a um protótipo físico que consiga ler movimentos/contato, enviar telemetria e devolver feedback por luz ou vibração. O repositório ainda está antes dessa etapa física completa: hoje ele concentra o firmware base, o protocolo de comunicação, um modelo mecânico inicial e uma interface de apoio.
+A proposta é construir o projeto em duas camadas que conversam entre si:
 
-> Estado atual: protótipo de firmware + mecânica digital. A integração com os sensores reais ainda é o próximo passo.
+1. **protótipo físico**, responsável por sensores, feedback tátil/visual e aquisição de dados;
+2. **STARK LAB**, uma interface 3D interativa usada para visualizar a arquitetura mecânica, eletrônica e a telemetria do sistema.
+
+O repositório ainda está antes da montagem física completa. Hoje ele concentra o firmware base, o protocolo de comunicação, um modelo mecânico inicial e uma interface 3D funcional para exploração técnica.
+
+> Estado atual: firmware + protocolo + mecânica digital + laboratório 3D interativo. A integração com sensores reais continua sendo a próxima etapa física.
 
 ## O que existe hoje
 
@@ -13,9 +18,14 @@ A ideia é chegar a um protótipo físico que consiga ler movimentos/contato, en
 - ring buffer de tamanho fixo para não depender de alocação dinâmica durante a coleta;
 - pacote binário versionado com sequence number e CRC16;
 - modelo inicial da estrutura em OpenSCAD;
-- interface web simples para acompanhar a ideia do dispositivo.
-
-O firmware atual usa duas entradas analógicas como base para **flexão** e **leitura de bateria**. Esse mapeamento é provisório até eu montar a primeira versão física e calibrar os sensores de verdade.
+- interface web 3D sem build, usando Three.js;
+- modelos procedurais interativos de armadura, manopla, capacete e reator;
+- seleção de peças por raycasting;
+- modos **Assembled, Structure, Electronics, Exploded e X-Ray**;
+- animação do faceplate do capacete;
+- articulação demonstrativa dos dedos da manopla;
+- modo HUD;
+- painel de diagnósticos e telemetria simulada em tempo real.
 
 ## Fluxo do firmware
 
@@ -35,7 +45,7 @@ Serial
 
 O código principal está em [`firmware/advanced/gauntlet_realtime.ino`](firmware/advanced/gauntlet_realtime.ino).
 
-A ideia de separar as duas tarefas é simples: a frequência de leitura dos sensores não precisa depender da velocidade com que os dados são enviados para outro programa.
+A separação entre aquisição e telemetria permite que a frequência de leitura dos sensores não dependa da velocidade de envio dos dados para outro programa.
 
 ## Estrutura
 
@@ -50,38 +60,44 @@ firmware/
 mechanics/
 └── gauntlet.scad               # primeira estrutura em OpenSCAD
 
-web/                             # interface de apoio
-docs/                            # anotações técnicas
+web/
+├── index.html                  # interface STARK LAB
+├── styles.css                  # HUD / laboratório técnico
+└── app.js                      # Three.js, interação e telemetria
+
+docs/                           # documentação técnica
 ```
 
 ## Hardware planejado
 
-A primeira montagem física deve ser pequena. Não quero colocar sensores só para aumentar a lista de componentes.
+A primeira montagem física deve continuar pequena. O objetivo não é adicionar sensores só para aumentar a lista de componentes, e sim validar cada subsistema.
 
-A base que faz sentido testar primeiro é:
+A base prevista é:
 
 - ESP32;
-- um sensor flex ou outro sensor de dobra;
+- sensor flex ou outro sensor de dobra;
 - IMU para orientação/movimento;
 - motor de vibração;
 - LED(s) de estado;
 - bateria e leitura de tensão.
 
-Depois dessa etapa, dá para decidir se reconhecimento de gestos mais elaborado, BLE/Wi-Fi ou atuadores adicionais realmente melhoram o projeto.
+Depois dessa etapa, reconhecimento de gestos mais elaborado, BLE/Wi-Fi e atuadores adicionais podem ser avaliados com base nos testes reais.
 
 ## Protocolo
 
-A comunicação serial não usa texto no firmware mais recente. `firmware/core/packet_protocol.h` define um pacote binário com cabeçalho, versão, tipo, sequência, payload e CRC.
+A comunicação serial do firmware mais recente não usa texto. [`firmware/core/packet_protocol.h`](firmware/core/packet_protocol.h) define um pacote binário com cabeçalho, versão, tipo, sequência, payload e CRC.
 
-Isso deixa mais fácil detectar pacote corrompido e manter compatibilidade quando novos campos forem adicionados.
+Isso ajuda a detectar pacotes corrompidos e permite evoluir o protocolo sem quebrar compatibilidade imediatamente.
 
 ## Mecânica
 
-`mechanics/gauntlet.scad` é o começo da parte física. O modelo ainda não deve ser tratado como peça pronta para impressão: medidas, encaixes, acesso à eletrônica e conforto só podem ser fechados depois de testar componentes reais.
+[`mechanics/gauntlet.scad`](mechanics/gauntlet.scad) é o começo da parte física. O modelo ainda não deve ser tratado como peça final para impressão: medidas, encaixes, acesso à eletrônica e conforto precisam ser fechados depois de testar os componentes reais.
 
-## Interface web
+## STARK LAB — interface 3D
 
-A interface pode ser aberta sem build:
+A interface deixou de ser apenas um dashboard visual e passou a funcionar como um **laboratório virtual de engenharia**.
+
+Ela pode ser aberta sem processo de build:
 
 ```bash
 cd web
@@ -90,7 +106,92 @@ python -m http.server 8000
 
 Depois, abra `http://localhost:8000`.
 
-Ela serve como apoio para visualizar o estado do protótipo. Não é a parte principal do projeto.
+A interface carrega Three.js por CDN e gera os modelos atuais proceduralmente no navegador, então não depende de arquivos `.glb` para funcionar nesta versão.
+
+### Módulos atuais
+
+#### Suit Overview
+
+Visão geral da arquitetura da armadura. Algumas peças funcionam como atalhos para os módulos internos.
+
+#### Gauntlet System
+
+- estrutura externa;
+- estrutura interna;
+- ESP32 conceitual;
+- bateria;
+- IMU;
+- emissor de palma;
+- cabeamento;
+- segmentos dos dedos;
+- animação de fechamento/abertura da mão.
+
+#### Helmet Assembly
+
+- shell;
+- faceplate;
+- servos laterais;
+- optical arrays;
+- módulo de HUD;
+- abertura/fechamento do faceplate;
+- modo HUD imersivo.
+
+#### Arc Reactor
+
+- núcleo emissivo;
+- anéis;
+- backplane;
+- dez bobinas selecionáveis;
+- pulso visual;
+- exploded view.
+
+#### Diagnostics
+
+Simula leituras de flexão, pitch, bateria e haptic, além de sequência de pacotes e CRC para representar visualmente a arquitetura de telemetria do firmware.
+
+### Modos de visualização
+
+- **ASSEMBLED** — modelo normal;
+- **STRUCTURE** — blindagem externa fica translúcida;
+- **ELECTRONICS** — destaca módulos eletrônicos e emissores;
+- **EXPLODED** — separa componentes principais;
+- **X-RAY** — blindagem em wireframe/transparência.
+
+### Atalhos
+
+| Tecla | Ação |
+|---|---|
+| `1` | Suit Overview |
+| `2` | Gauntlet |
+| `3` | Helmet |
+| `4` | Arc Reactor |
+| `5` | Diagnostics |
+| `X` | X-Ray |
+| `E` | Exploded View |
+| `H` | HUD, quando estiver no capacete |
+| `R` | Reset da câmera |
+
+## Próxima evolução do 3D
+
+Os modelos atuais são **procedurais e funcionais**. Isso deixa a aplicação leve e permite validar a interação antes de depender de assets externos.
+
+A próxima evolução natural é substituir gradualmente os modelos procedurais por modelos `.glb/.gltf` próprios ou com licença compatível, mantendo a mesma camada de interação:
+
+```text
+modelo GLB
+   ↓
+Three.js
+   ↓
+raycasting / hotspots
+   ↓
+component metadata
+   ↓
+inspector + camera transitions
+   ↓
+telemetry / ESP32
+```
+
+Assim, o projeto pode ganhar geometria mais realista sem precisar reescrever a interface inteira.
 
 ## Tecnologias
 
@@ -101,9 +202,10 @@ Ela serve como apoio para visualizar o estado do protótipo. Não é a parte pri
 | Agendamento | FreeRTOS |
 | Comunicação | Serial + protocolo binário |
 | Mecânica | OpenSCAD |
+| 3D Web | Three.js / WebGL |
 | Interface | HTML, CSS e JavaScript |
 
-## Próximos testes
+## Próximos testes físicos
 
 1. montar ESP32 + primeiro sensor flex;
 2. confirmar frequência e ruído das leituras;
@@ -111,6 +213,7 @@ Ela serve como apoio para visualizar o estado do protótipo. Não é a parte pri
 4. adicionar IMU;
 5. validar o pacote serial com um receptor real;
 6. testar feedback por vibração;
-7. ajustar o modelo da manopla às dimensões dos componentes.
+7. ajustar o modelo da manopla às dimensões dos componentes;
+8. conectar telemetria real ao STARK LAB.
 
-Quero manter cada etapa pequena o suficiente para saber o que realmente funcionou em hardware, em vez de construir toda a arquitetura antes da primeira montagem física.
+A prioridade continua sendo manter cada etapa pequena o suficiente para saber o que realmente funcionou em hardware, em vez de construir toda a arquitetura física antes da primeira validação.
